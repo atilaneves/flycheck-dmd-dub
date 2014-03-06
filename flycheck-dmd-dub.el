@@ -1,5 +1,7 @@
 ;;; flycheck-dmd-dub --- elisp to read package.json from dub and add syntax highlighting that resolves dependencies
 ;;; Commentary:
+;; Author: Atila Neves
+;; URL: http://github.com/atilaneves/flycheck-dmd-dub
 
 (provide 'flycheck-dmd-dub)
 
