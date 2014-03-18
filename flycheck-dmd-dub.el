@@ -26,10 +26,15 @@
     (concat "~/.dub/packages/" pkg-name pkg-suffix)))
 
 
+(defun stringify-car(lst)
+  "Transforms the car of the list into a string representation of its symbol"
+  (cons (symbol-name (car lst)) (cdr lst)))
+
+
 (defun get-dub-package-dirs(dub-json-file)
   (let ((dependencies (cdr (assq 'dependencies (json-read-file dub-json-file)))))
     (delq nil (mapcar 'dub-pkg-to-dir-name
-          (mapcar (lambda(x) (cons (symbol-name (car x)) (cdr x))) dependencies)))))
+          (mapcar 'stringify-car dependencies)))))
 
 (add-hook 'd-mode-hook
   (lambda()
