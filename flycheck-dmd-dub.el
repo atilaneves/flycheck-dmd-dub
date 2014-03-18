@@ -21,14 +21,16 @@
 
 (defun dub-pkgs-dir()
   "Returns the directory where dub stores packages"
-  "~/.dub/packages")
+  (if (eq system-type 'windows-nt)
+      (concat (getenv "APPDATA") "\\dub\\packages\\")
+    "~/.dub/packages/"))
 
 
 (defun dub-pkg-to-dir-name(pkg)
   "Returns the directory name for a dub package dependency such as 'cerealed': '~master'"
   (let ((pkg-name (car pkg))
         (pkg-suffix (dub-pkg-version-to-suffix (cdr pkg))))
-    (concat "~/.dub/packages/" pkg-name pkg-suffix)))
+    (concat (dub-pkgs-dir) pkg-name pkg-suffix)))
 
 
 (defun stringify-car(lst)
