@@ -19,6 +19,11 @@
    (t nil)))
 
 
+(defun dub-pkgs-dir()
+  "Returns the directory where dub stores packages"
+  "~/.dub/packages")
+
+
 (defun dub-pkg-to-dir-name(pkg)
   "Returns the directory name for a dub package dependency such as 'cerealed': '~master'"
   (let ((pkg-name (car pkg))
@@ -32,9 +37,10 @@
 
 
 (defun get-dub-package-dirs(dub-json-file)
-  (let ((dependencies (cdr (assq 'dependencies (json-read-file dub-json-file)))))
-    (delq nil (mapcar 'dub-pkg-to-dir-name
-          (mapcar 'stringify-car dependencies)))))
+  (let* ((symbol-dependencies (cdr (assq 'dependencies (json-read-file dub-json-file))))
+         (dependencies (mapcar 'stringify-car symbol-dependencies)))
+    (delq nil (mapcar 'dub-pkg-to-dir-name dependencies))))
+
 
 (add-hook 'd-mode-hook
   (lambda()
