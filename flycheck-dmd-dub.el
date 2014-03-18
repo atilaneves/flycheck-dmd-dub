@@ -51,10 +51,17 @@
     (or dub-json-dir package-json-dir)))
 
 
+(defun get-jsonfile-name(basedir)
+  "Returns the name of the json file to read given the base directory"
+  (if (file-exists-p (concat basedir "dub.json"))
+      (concat basedir "dub.json")
+    (concat basedir "package.json")))
+
+
 (add-hook 'd-mode-hook
   (lambda()
     (let* ((basedir (get-project-dir))
-           (jsonfile (concat basedir "package.json")))
+           (jsonfile (get-jsonfile-name  basedir)))
       (when basedir
         (setq flycheck-dmd-include-path (get-dub-package-dirs jsonfile))))))
 
