@@ -9,18 +9,26 @@
 (require 'json)
 
 
-(defun dub-dep-to-suffix(dep)
+(defun dub-pkg-version-to-suffix(version)
   "From dub dependency to suffix for the package directory. Expects what
   follows the colon in a dub.json file such as '~master' or '>=1.2.3' and
   returns the suffix to compose the directory name with."
   (cond
-   ((equal dep "~master") "-master") ; e.g. "cerealed": "~master" -> cerealed-master
-   ((equal (substring dep 1 2) "=") (concat "-" (substring dep 2))) ;>= or ==
+   ((equal version "~master") "-master") ; e.g. "cerealed": "~master" -> cerealed-master
+   ((equal (substring version 1 2) "=") (concat "-" (substring version 2))) ;>= or ==
    (t nil)))
+
+
+(defun dub-pkg-to-dir-name(pkg)
+  "Returns the directory name for a dub package dependency such as 'cerealed': '~master'"
+  (let ((pkg-name (car pkg))
+        (pkg-suffix (dub-pkg-version-to-suffix (cdr pkg))))
+    (concat "~/.dub/packages/" pkg-name pkg-suffix)))
+
 
 (defun get-dub-package-dirs(dub-json-file)
   (let ((dependencies (cdr (assq 'dependencies (json-read-file dub-json-file)))))
-    (delq nil (mapcar (lambda(module) (concat "~/.dub/packages/" (car module) (dub-dep-to-suffix (cdr module))))
+    (delq nil (mapcar 'dub-pkg-to-dir-name
           (mapcar (lambda(x) (cons (symbol-name (car x)) (cdr x))) dependencies)))))
 
 (add-hook 'd-mode-hook
