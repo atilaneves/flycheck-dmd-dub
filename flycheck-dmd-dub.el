@@ -44,9 +44,16 @@
     (delq nil (mapcar 'dub-pkg-to-dir-name dependencies))))
 
 
+(defun get-project-dir()
+  "Locates the project directory by searching up for either package.json or dub.json"
+  (let ((package-json-dir (locate-dominating-file default-directory "dub.json"))
+        (dub-json-dir (locate-dominating-file default-directory "package.json")))
+    (or dub-json-dir package-json-dir)))
+
+
 (add-hook 'd-mode-hook
   (lambda()
-    (let* ((basedir (locate-dominating-file default-directory "package.json"))
+    (let* ((basedir (get-project-dir))
            (jsonfile (concat basedir "package.json")))
       (when basedir
         (setq flycheck-dmd-include-path (get-dub-package-dirs jsonfile))))))
