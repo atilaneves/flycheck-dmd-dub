@@ -1,4 +1,6 @@
 flycheck-dmd-dub
 ================
 
-elisp to read package.json from dub and add syntax highlighting that resolves dependencies
+Emacs lisp to read dependency information from dub and add syntax highlighting via flycheck that resolves dependencies.
+
+Usage: `(add-hook 'd-mode-hook 'flycheck-dmd-dub-set-include-path)`
