@@ -85,21 +85,41 @@ PKG is a package name such as 'cerealed': '~master'."
   (should (equal (fldd--stringify-car '(foo bar)) '("foo" bar))))
 
 
+(defun fldd--add-source-dir (dir)
+  "Append the source directory to DIR."
+  (concat dir "/source"))
+
+(ert-deftest test-fldd--add-source-dir ()
+  "Test adding the source dir to the package dir."
+  (should (equal (fldd--add-source-dir "~/.dub/packages/vibe-d-master") "~/.dub/packages/vibe-d-master/source")))
+
+(defun fldd--append-source-dirs (dirs)
+  "Append version of dir in DIRS with source at the end.
+This is done so that standard layout packages are visible."
+  (append dirs (mapcar 'fldd--add-source-dir dirs)))
+
+(ert-deftest test-fldd--append-source-dirs ()
+  "Test appending source dirs to the original dirs."
+  (should (equal (fldd--append-source-dirs
+                  '("foo/bar" "baz/boo"))
+                 '("foo/bar" "baz/boo" "foo/bar/source" "baz/boo/source"))))
+
+
 (defun fldd--get-dub-package-dirs-json (json)
   "Return the directories where the packages are for this JSON assoclist."
   (let* ((symbol-dependencies (cdr (assq 'dependencies json)))
          (dependencies (mapcar 'fldd--stringify-car symbol-dependencies)))
-    (delq nil (mapcar 'fldd--dub-pkg-to-dir-name dependencies))))
-
+    (fldd--append-source-dirs (delq nil (mapcar 'fldd--dub-pkg-to-dir-name dependencies)))))
 
 (ert-deftest test-fldd--get-dub-package-dirs-json ()
   "Test getting the package directories from a json object"
   (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{}")) nil))
   (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
   (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string
-                                                   "{\"dependencies\": { \"vibe-d\": \"~master\"}}"))
-                                                   '("~/.dub/packages/vibe-d-master")))
+  (should (equal (fldd--get-dub-package-dirs-json
+                  (json-read-from-string
+                   "{\"dependencies\": { \"vibe-d\": \"~master\"}}"))
+                 '("~/.dub/packages/vibe-d-master" "~/.dub/packages/vibe-d-master/source")))
   )
 
 (defun fldd--get-dub-package-dirs (dub-json-file)
@@ -120,8 +140,8 @@ PKG is a package name such as 'cerealed': '~master'."
   (let ((dub-json (concat basedir "dub.json")))
     (if (file-exists-p dub-json)
         dub-json
-      (concat basedir "package.json"))))
-      ;(expand-file-name "package.json" basedir))))
+      ;(concat basedir "package.json"))))
+      (expand-file-name "package.json" basedir))))
 
 
 ;;;###autoload
