@@ -47,9 +47,15 @@ directory name with."
    ((equal (substring version 1 2) "=") (concat "-" (substring version 2))) ;>= or ==
    (t nil)))
 
+(ert-deftest test-fldd--dub-pkg-version-to-suffix ()
+  "Test getting the suffix from the package version"
+  (should (equal (fldd--dub-pkg-version-to-suffix "~master") "-master"))
+  (should (equal (fldd--dub-pkg-version-to-suffix ">=1.2.3") "-1.2.3"))
+  (should (equal (fldd--dub-pkg-version-to-suffix "==2.3.4") "-2.3.4")))
+
 
 (defun fldd--dub-pkgs-dir ()
-  "Return the directory where dub stores packages."
+  "Return the directory where dub packages are found."
   (if (eq system-type 'windows-nt)
       (concat (getenv "APPDATA") "\\dub\\packages\\")
     "~/.dub/packages/"))
@@ -62,16 +68,44 @@ PKG is a package name such as 'cerealed': '~master'."
         (pkg-suffix (fldd--dub-pkg-version-to-suffix (cdr pkg))))
     (concat (fldd--dub-pkgs-dir) pkg-name pkg-suffix)))
 
+(ert-deftest test-fldd--dub-pkg-to-dir-name ()
+  "Test that the directory name from a dub package dependency is correct."
+  (if (not (eq system-type 'windows-nt))
+      (progn
+        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . "~master")) "~/.dub/packages/cerealed-master"))
+        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . ">=3.4.5")) "~/.dub/packages/cerealed-3.4.5")))))
+
 
 (defun fldd--stringify-car (lst)
   "Transforms the car of LST into a string representation of its symbol."
   (cons (symbol-name (car lst)) (cdr lst)))
 
+(ert-deftest test-fldd--stringify-car ()
+  "Test stringifying the car of a list"
+  (should (equal (fldd--stringify-car '(foo bar)) '("foo" bar))))
 
-(defun fldd--get-dub-package-dirs (dub-json-file)
-  (let* ((symbol-dependencies (cdr (assq 'dependencies (json-read-file dub-json-file))))
+
+(defun fldd--get-dub-package-dirs-json (json)
+  "Return the directories where the packages are for this JSON assoclist."
+  (let* ((symbol-dependencies (cdr (assq 'dependencies json)))
          (dependencies (mapcar 'fldd--stringify-car symbol-dependencies)))
     (delq nil (mapcar 'fldd--dub-pkg-to-dir-name dependencies))))
+
+
+(ert-deftest test-fldd--get-dub-package-dirs-json ()
+  "Test getting the package directories from a json object"
+  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{}")) nil))
+  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
+  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
+  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string
+                                                   "{\"dependencies\": { \"vibe-d\": \"~master\"}}"))
+                                                   '("~/.dub/packages/vibe-d-master")))
+  )
+
+(defun fldd--get-dub-package-dirs (dub-json-file)
+  "Read DUB-JSON-FILE and get the package directories."
+  (fldd--get-dub-package-dirs-json (json-read-file dub-json-file)))
+
 
 
 (defun fldd--get-project-dir ()
@@ -87,6 +121,7 @@ PKG is a package name such as 'cerealed': '~master'."
     (if (file-exists-p dub-json)
         dub-json
       (concat basedir "package.json"))))
+      ;(expand-file-name "package.json" basedir))))
 
 
 ;;;###autoload
