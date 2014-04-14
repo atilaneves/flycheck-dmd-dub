@@ -76,57 +76,60 @@ PKG is a package name such as 'cerealed': '~master'."
         (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . ">=3.4.5")) "~/.dub/packages/cerealed-3.4.5")))))
 
 
-(defun fldd--stringify-car (lst)
-  "Transforms the car of LST into a string representation of its symbol."
-  (cons (symbol-name (car lst)) (cdr lst)))
+(defun fldd--pkg-to-dir-names (pkg)
+  "Return a directory name for the assoc list PKG."
+  (let ((import-paths (cdr (assq 'importPaths pkg)))
+        (path (cdr (assq 'path pkg))))
+    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
 
-(ert-deftest test-fldd--stringify-car ()
-  "Test stringifying the car of a list"
-  (should (equal (fldd--stringify-car '(foo bar)) '("foo" bar))))
+(ert-deftest test-fldd--pkg-to-dir-names ()
+  "Test that a correct dir name is return for one package."
+  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["source"]) (path . "/usr/bin")))
+                '("/usr/bin/source")))
+  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["."]) (path . "/usr/bin")))
+                 '("/usr/bin")))
+  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["." "source"]) (path . "/foo/bar")))
+                 '("/foo/bar" "/foo/bar/source"))))
 
+(defun fldd--flatten(x)
+  (cond ((null x) nil)
+        ((listp x) (append (fldd--flatten (car x)) (fldd--flatten (cdr x))))
+        (t (list x))))
 
-(defun fldd--add-source-dir (dir)
-  "Append the source directory to DIR."
-  (concat dir "/source"))
+(defun fldd--pkgs-to-dir-names (pkgs)
+  "Return a list of dir names for assoc list PKGS."
+  ;car of cdr since taking the cdr creates a list with the vector
+  (fldd--flatten (mapcar #'fldd--pkg-to-dir-names (cdr pkgs))))
 
-(ert-deftest test-fldd--add-source-dir ()
-  "Test adding the source dir to the package dir."
-  (should (equal (fldd--add-source-dir "~/.dub/packages/vibe-d-master") "~/.dub/packages/vibe-d-master/source")))
-
-(defun fldd--append-source-dirs (dirs)
-  "Append version of dir in DIRS with source at the end.
-This is done so that standard layout packages are visible."
-  (append dirs (mapcar 'fldd--add-source-dir dirs)))
-
-(ert-deftest test-fldd--append-source-dirs ()
-  "Test appending source dirs to the original dirs."
-  (should (equal (fldd--append-source-dirs
-                  '("foo/bar" "baz/boo"))
-                 '("foo/bar" "baz/boo" "foo/bar/source" "baz/boo/source"))))
+(ert-deftest test-fldd--pkgs-to-dir-names ()
+  "Test that getting all directories for all packages works."
+  (should (equal (fldd--pkgs-to-dir-names
+                  '(packages . [((importPaths . ["src" "tests"]) (path . "/foo/bar"))
+                               ((importPaths . ["lefoo"]) (path . "/usr/bin"))]))
+                 '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
 
 (defun fldd--get-dub-package-dirs-json (json)
   "Return the directories where the packages are for this JSON assoclist."
-  (let* ((symbol-dependencies (cdr (assq 'dependencies json)))
-         (dependencies (mapcar 'fldd--stringify-car symbol-dependencies)))
-    (fldd--append-source-dirs (delq nil (mapcar 'fldd--dub-pkg-to-dir-name dependencies)))))
+  (let ((packages (assq 'packages json)))
+    (fldd--pkgs-to-dir-names packages)))
 
 (ert-deftest test-fldd--get-dub-package-dirs-json ()
   "Test getting the package directories from a json object"
   (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"dependencies\": {}}")) nil))
+  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"packages\": []}")) nil))
   (should (equal (fldd--get-dub-package-dirs-json
                   (json-read-from-string
-                   "{\"dependencies\": { \"vibe-d\": \"~master\"}}"))
-                 '("~/.dub/packages/vibe-d-master" "~/.dub/packages/vibe-d-master/source")))
-  )
-
-(defun fldd--get-dub-package-dirs (dub-json-file)
-  "Read DUB-JSON-FILE and get the package directories."
-  (fldd--get-dub-package-dirs-json (json-read-file dub-json-file)))
-
-
+                   "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } "))
+                 '("/foo/bar")))
+    (should (equal (fldd--get-dub-package-dirs-json
+                  (json-read-from-string
+                   "{\"packages\": [
+                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
+                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
+                   ]}"))
+                 '("/foo/bar/source" "/blug/dlag/source")))
+)
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
@@ -135,22 +138,17 @@ This is done so that standard layout packages are visible."
     (or dub-json-dir package-json-dir)))
 
 
-(defun fldd--get-jsonfile-name(basedir)
-  "Return the name of the json file to read given the base directory"
-  (let ((dub-json (concat basedir "dub.json")))
-    (if (file-exists-p dub-json)
-        dub-json
-      ;(concat basedir "package.json"))))
-      (expand-file-name "package.json" basedir))))
-
+(defun fldd--get-dub-package-dirs ()
+  "Get package directories."
+  (let ((default-directory (fldd--get-project-dir)))
+    (fldd--get-dub-package-dirs-json (json-read-from-string (shell-command-to-string "dub describe")))))
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
   "Set `flycheck-dmd-include-path' from dub info if available."
-  (let* ((basedir (fldd--get-project-dir))
-           (jsonfile (fldd--get-jsonfile-name basedir)))
+  (let* ((basedir (fldd--get-project-dir)))
       (when basedir
-        (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs jsonfile)))))
+        (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
 
 
 
