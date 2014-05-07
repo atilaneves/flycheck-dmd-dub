@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.1
+;; Version: 0.4
 ;; Package-Requires ((flycheck "0.17") (ert "0"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
@@ -23,9 +23,10 @@
 
 ;;; Commentary:
 
-;; This package reads the dub package file, either dub.json or package.json,
-;; and automatically sets flycheck-dmd-include-paths so that flycheck
-;; syntax checking knows to include the dependent packages.
+;; This package uses "dub describe" to obtain a list of all
+;; dependencies of a D dub project and sets the variable flycheck-dmd-include-paths
+;; so that flycheck syntax checking knows how to call the compiler
+;; and pass it include flags to find the dependencies
 
 ;; Usage:
 ;;
@@ -92,10 +93,12 @@ PKG is a package name such as 'cerealed': '~master'."
   (should (equal (fldd--pkg-to-dir-names '((importPaths . ["." "source"]) (path . "/foo/bar")))
                  '("/foo/bar" "/foo/bar/source"))))
 
+
 (defun fldd--flatten(x)
   (cond ((null x) nil)
         ((listp x) (append (fldd--flatten (car x)) (fldd--flatten (cdr x))))
         (t (list x))))
+
 
 (defun fldd--pkgs-to-dir-names (pkgs)
   "Return a list of dir names for assoc list PKGS."
@@ -132,6 +135,7 @@ PKG is a package name such as 'cerealed': '~master'."
                  '("/foo/bar/source" "/blug/dlag/source")))
 )
 
+
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
   (let ((package-json-dir (locate-dominating-file default-directory "dub.json"))
@@ -144,13 +148,13 @@ PKG is a package name such as 'cerealed': '~master'."
   (let ((default-directory (fldd--get-project-dir)))
     (fldd--get-dub-package-dirs-json (json-read-from-string (shell-command-to-string "dub describe")))))
 
+
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
   "Set `flycheck-dmd-include-path' from dub info if available."
   (let* ((basedir (fldd--get-project-dir)))
       (when basedir
         (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
-
 
 
 (provide 'flycheck-dmd-dub)
