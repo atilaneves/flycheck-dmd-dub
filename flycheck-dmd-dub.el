@@ -28,6 +28,9 @@
 ;; so that flycheck syntax checking knows how to call the compiler
 ;; and pass it include flags to find the dependencies
 
+;; If it's not clear what any one function does, consult the unit tests
+;; in the tests directory.
+
 ;; Usage:
 ;;
 ;;      (add-hook 'd-mode-hook 'flycheck-dmd-dub-set-include-path)
@@ -49,11 +52,6 @@ directory name with."
    ((equal (substring version 1 2) "=") (concat "-" (substring version 2))) ;>= or ==
    (t nil)))
 
-(ert-deftest test-fldd--dub-pkg-version-to-suffix ()
-  "Test getting the suffix from the package version"
-  (should (equal (fldd--dub-pkg-version-to-suffix "~master") "-master"))
-  (should (equal (fldd--dub-pkg-version-to-suffix ">=1.2.3") "-1.2.3"))
-  (should (equal (fldd--dub-pkg-version-to-suffix "==2.3.4") "-2.3.4")))
 
 
 (defun fldd--dub-pkgs-dir ()
@@ -70,28 +68,12 @@ PKG is a package name such as 'cerealed': '~master'."
         (pkg-suffix (fldd--dub-pkg-version-to-suffix (cdr pkg))))
     (concat (fldd--dub-pkgs-dir) pkg-name pkg-suffix)))
 
-(ert-deftest test-fldd--dub-pkg-to-dir-name ()
-  "Test that the directory name from a dub package dependency is correct."
-  (if (not (eq system-type 'windows-nt))
-      (progn
-        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . "~master")) "~/.dub/packages/cerealed-master"))
-        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . ">=3.4.5")) "~/.dub/packages/cerealed-3.4.5")))))
-
 
 (defun fldd--pkg-to-dir-names (pkg)
   "Return a directory name for the assoc list PKG."
   (let ((import-paths (cdr (assq 'importPaths pkg)))
         (path (cdr (assq 'path pkg))))
     (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
-
-(ert-deftest test-fldd--pkg-to-dir-names ()
-  "Test that a correct dir name is return for one package."
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["source"]) (path . "/usr/bin")))
-                '("/usr/bin/source")))
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["."]) (path . "/usr/bin")))
-                 '("/usr/bin")))
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["." "source"]) (path . "/foo/bar")))
-                 '("/foo/bar" "/foo/bar/source"))))
 
 
 (defun fldd--flatten(x)
@@ -105,35 +87,11 @@ PKG is a package name such as 'cerealed': '~master'."
   ;car of cdr since taking the cdr creates a list with the vector
   (fldd--flatten (mapcar #'fldd--pkg-to-dir-names (cdr pkgs))))
 
-(ert-deftest test-fldd--pkgs-to-dir-names ()
-  "Test that getting all directories for all packages works."
-  (should (equal (fldd--pkgs-to-dir-names
-                  '(packages . [((importPaths . ["src" "tests"]) (path . "/foo/bar"))
-                               ((importPaths . ["lefoo"]) (path . "/usr/bin"))]))
-                 '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
-
 
 (defun fldd--get-dub-package-dirs-json (json)
   "Return the directories where the packages are for this JSON assoclist."
   (let ((packages (assq 'packages json)))
     (fldd--pkgs-to-dir-names packages)))
-
-(ert-deftest test-fldd--get-dub-package-dirs-json ()
-  "Test getting the package directories from a json object"
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"packages\": []}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json
-                  (json-read-from-string
-                   "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } "))
-                 '("/foo/bar")))
-    (should (equal (fldd--get-dub-package-dirs-json
-                  (json-read-from-string
-                   "{\"packages\": [
-                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
-                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}"))
-                 '("/foo/bar/source" "/blug/dlag/source")))
-)
 
 
 (defun fldd--get-project-dir ()
