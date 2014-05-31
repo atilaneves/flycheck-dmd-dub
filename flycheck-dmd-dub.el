@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.4
-;; Package-Requires ((flycheck "0.17") (ert "0"))
+;; Version: 0.5
+;; Package-Requires ((flycheck "0.17"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
 
@@ -39,7 +39,6 @@
 
 (require 'json)
 (require 'flycheck)
-(require 'ert)
 
 
 (defun fldd--dub-pkg-version-to-suffix (version)
