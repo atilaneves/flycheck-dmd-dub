@@ -102,8 +102,11 @@ PKG is a package name such as 'cerealed': '~master'."
 
 (defun fldd--get-dub-package-dirs ()
   "Get package directories."
-  (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-dirs-json (json-read-from-string (shell-command-to-string "dub describe")))))
+  (let* ((default-directory (fldd--get-project-dir))
+         (command-output (replace-regexp-in-string "^\\([[:ascii:][:nonascii:]]*?\\){.*\\'" ""
+                                                   (shell-command-to-string "dub describe")
+                                                   nil nil 1)))
+    (fldd--get-dub-package-dirs-json (json-read-from-string command-output))))
 
 
 ;;;###autoload
