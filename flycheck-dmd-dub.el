@@ -88,8 +88,13 @@ PKG is a package name such as 'cerealed': '~master'."
 
 
 (defun fldd--get-dub-package-dirs-json (json)
-  "Return the directories where the packages are for this JSON assoclist."
-  (let ((packages (assq 'packages json)))
+  "Get package directories from dub output.
+Return the directories where the packages are for the assoclist
+in this JSON string.  Any characters before the first opening
+brace are discarded before parsing."
+  (let* ((data (json-read-from-string (replace-regexp-in-string "^\\([[:ascii:][:nonascii:]]*?\\){.*\\'" ""
+                                                                json nil nil 1)))
+         (packages (assq 'packages data)))
     (fldd--pkgs-to-dir-names packages)))
 
 
@@ -103,7 +108,7 @@ PKG is a package name such as 'cerealed': '~master'."
 (defun fldd--get-dub-package-dirs ()
   "Get package directories."
   (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-dirs-json (json-read-from-string (shell-command-to-string "dub describe")))))
+    (fldd--get-dub-package-dirs-json (shell-command-to-string "dub describe"))))
 
 
 ;;;###autoload

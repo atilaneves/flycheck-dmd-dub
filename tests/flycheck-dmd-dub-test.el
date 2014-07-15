@@ -67,20 +67,25 @@
 
 
 (ert-deftest test-fldd--get-dub-package-dirs-json ()
-  "Test getting the package directories from a json object"
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{}")) nil))
-  (should (equal (fldd--get-dub-package-dirs-json (json-read-from-string "{\"packages\": []}")) nil))
+  "Test getting the package directories from a json string."
+  (should (equal (fldd--get-dub-package-dirs-json "{}") nil))
+  (should (equal (fldd--get-dub-package-dirs-json "{\"packages\": []}") nil))
   (should (equal (fldd--get-dub-package-dirs-json
-                  (json-read-from-string
-                   "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } "))
+                  "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
                  '("/foo/bar")))
-    (should (equal (fldd--get-dub-package-dirs-json
-                  (json-read-from-string
-                   "{\"packages\": [
+  (should (equal (fldd--get-dub-package-dirs-json
+                  "{\"packages\": [
                         { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
                         { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}"))
-                 '("/foo/bar/source" "/blug/dlag/source"))))
+                   ]}")
+                 '("/foo/bar/source" "/blug/dlag/source")))
+  (should (equal (fldd--get-dub-package-dirs-json
+                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide\n{}") nil))
+  (should (equal (fldd--get-dub-package-dirs-json
+                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide
+{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
+                 '("/foo/bar")))
+)
 
 (provide 'flycheck-dmd-dub-test)
 ;;; flycheck-dmd-dub-test.el ends here
