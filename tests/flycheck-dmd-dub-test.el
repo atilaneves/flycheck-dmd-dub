@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2014  Atila Neves
 
-;; Author:  <aalvesne@atilacisco3>
+;; Author:  <atila.neves@gmail.com>
 ;; Keywords:
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -66,25 +66,32 @@
                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
 
-(ert-deftest test-fldd--get-dub-package-dirs-json ()
+(ert-deftest test-fldd--get-dub-package-dirs-output ()
   "Test getting the package directories from a json string."
-  (should (equal (fldd--get-dub-package-dirs-json "{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-json "{\"packages\": []}") nil))
-  (should (equal (fldd--get-dub-package-dirs-json
+  (should (equal (fldd--get-dub-package-dirs-output "{}") nil))
+  (should (equal (fldd--get-dub-package-dirs-output "{\"packages\": []}") nil))
+  (should (equal (fldd--get-dub-package-dirs-output
                   "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
                  '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-dirs-json
+  (should (equal (fldd--get-dub-package-dirs-output
                   "{\"packages\": [
                         { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
                         { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
                    ]}")
                  '("/foo/bar/source" "/blug/dlag/source")))
-  (should (equal (fldd--get-dub-package-dirs-json
+  (should (equal (fldd--get-dub-package-dirs-output
                   "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide\n{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-json
+  (should (equal (fldd--get-dub-package-dirs-output
                   "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide
 {\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
                  '("/foo/bar")))
+  (should (equal (fldd--get-dub-package-dirs-output
+                  "Invalid source/import path: /foo/bar/path
+                  {\"packages\": [
+                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
+                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
+                   ]}")
+                 '("/foo/bar/source" "/blug/dlag/source")))
 )
 
 (provide 'flycheck-dmd-dub-test)
