@@ -4,7 +4,10 @@ install:
   - sudo apt-get -qq update
   - sudo apt-get -qq -f install
   - sudo apt-get -qq install emacs24 emacs24-el
+  - git clone https://github.com/flycheck/flycheck
 
 script:
-  - mkdir -p /home/travis/.emacs.d/elpa
-  - emacs24 -batch -l ert -l tests/flycheck-dmd-dub-test.el -f ert-run-tests-batch-and-exit
+  - echo "(require 'package)\n" > $HOME/.emacs
+  - echo "(setq package-archieves  '((\"melpa\" . \"http://melpa.milkbox.net/packages/\")))" >> $HOME/.emacs
+  - echo "(or (package-installed-p 'flycheck) (package-install 'flycheck))" >> $HOME/.emacs
+  - emacs24 -batch -l ert -l flycheck-l flycheck-dmd-dub/tests/flycheck-dmd-dub-test.el -f ert-run-tests-batch-and-exit
