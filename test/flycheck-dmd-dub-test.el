@@ -1,4 +1,4 @@
-;;; flycheck-dmd-dub-tests.el --- Tests for flycheck-dmd-dub
+;;; flycheck-dmd-dub-test.el --- Tests for flycheck-dmd-dub
 
 ;; Copyright (C) 2014  Atila Neves
 
@@ -26,74 +26,12 @@
 
 (require 'f)
 
-(defvar fldd-test-path (f-dirname load-file-name))
-(defvar fldd-root-path (f-parent fldd-test-path))
+(setq fldd-test-path (f-dirname load-file-name))
+(setq fldd-root-path (f-parent fldd-test-path))
 (add-to-list 'load-path fldd-root-path)
 
 (require 'ert)
 (require 'flycheck-dmd-dub)
-
-
-(ert-deftest test-fldd--dub-pkg-version-to-suffix ()
-  "Test getting the suffix from the package version"
-  (should (equal (fldd--dub-pkg-version-to-suffix "~master") "-master"))
-  (should (equal (fldd--dub-pkg-version-to-suffix ">=1.2.3") "-1.2.3"))
-  (should (equal (fldd--dub-pkg-version-to-suffix "==2.3.4") "-2.3.4")))
-
-
-(ert-deftest test-fldd--dub-pkg-to-dir-name ()
-  "Test that the directory name from a dub package dependency is correct."
-  (if (not (eq system-type 'windows-nt))
-      (progn
-        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . "~master")) "~/.dub/packages/cerealed-master"))
-        (should (equal (fldd--dub-pkg-to-dir-name '("cerealed" . ">=3.4.5")) "~/.dub/packages/cerealed-3.4.5")))))
-
-
-(ert-deftest test-fldd--pkg-to-dir-names ()
-  "Test that a correct dir name is return for one package."
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["source"]) (path . "/usr/bin")))
-                '("/usr/bin/source")))
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["."]) (path . "/usr/bin")))
-                 '("/usr/bin")))
-  (should (equal (fldd--pkg-to-dir-names '((importPaths . ["." "source"]) (path . "/foo/bar")))
-                 '("/foo/bar" "/foo/bar/source"))))
-
-
-(ert-deftest test-fldd--pkgs-to-dir-names ()
-  "Test that getting all directories for all packages works."
-  (should (equal (fldd--pkgs-to-dir-names
-                  '(packages . [((importPaths . ["src" "tests"]) (path . "/foo/bar"))
-                               ((importPaths . ["lefoo"]) (path . "/usr/bin"))]))
-                 '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
-
-
-(ert-deftest test-fldd--get-dub-package-dirs-output ()
-  "Test getting the package directories from a json string."
-  (should (equal (fldd--get-dub-package-dirs-output "{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output "{\"packages\": []}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "{\"packages\": [
-                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
-                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide\n{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide
-{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "Invalid source/import path: /foo/bar/path
-                  {\"packages\": [
-                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
-                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-)
 
 (provide 'flycheck-dmd-dub-test)
 ;;; flycheck-dmd-dub-test.el ends here
