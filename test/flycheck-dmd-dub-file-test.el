@@ -53,16 +53,15 @@
   (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path))
         (expected "~/.dub/packages/cerealed-master"))
     (with-sandbox sandbox-path
-      (write-dub-file "dub.json" sandbox-path)
+      (write-dub-file "package.json" sandbox-path)
       (flycheck-dmd-dub-set-include-path)
       (should (equal (length flycheck-dmd-include-path) 1))
       (should (equal-paths (car flycheck-dmd-include-path) expected)))
 
     (with-sandbox sandbox-path
-      (write-dub-file "package.json" sandbox-path)
+      (write-dub-file "foo.json" sandbox-path)
       (flycheck-dmd-dub-set-include-path)
-      (should (equal (length flycheck-dmd-include-path) 1))
-      (should (equal-paths (car flycheck-dmd-include-path) expected)))))
+      (should (equal flycheck-dmd-include-path nil)))))
 
 
 (provide 'flycheck-dmd-dub-file-test)
