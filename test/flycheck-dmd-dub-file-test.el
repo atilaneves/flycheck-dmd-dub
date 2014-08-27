@@ -62,12 +62,7 @@
       (write-dub-file "package.json" sandbox-path)
       (flycheck-dmd-dub-set-include-path)
       (should (equal (length flycheck-dmd-include-path) 1))
-      (should (equal-paths (car flycheck-dmd-include-path) expected)))
-
-    (with-sandbox sandbox-path
-      (write-dub-file "foo.json" sandbox-path)
-      (flycheck-dmd-dub-set-include-path)
-      (should (equal flycheck-dmd-include-path nil)))))
+      (should (equal-paths (car flycheck-dmd-include-path) expected)))))
 
 
 (provide 'flycheck-dmd-dub-file-test)
