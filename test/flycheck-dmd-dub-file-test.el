@@ -48,33 +48,30 @@
 }" 'utf-8 (expand-file-name name path)))
 
 
+(defvar fldd--sandbox-path (expand-file-name "sandbox" fldd-test-path))
+
 (ert-deftest test-fldd-set-include-path-package-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
-  (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path))
-        (expected "~/.dub/packages/cerealed-master"))
-    (with-sandbox sandbox-path
-      (write-dub-file "package.json" sandbox-path)
-      (flycheck-dmd-dub-set-include-path)
-      (should (equal (length flycheck-dmd-include-path) 1))
-      (should (equal-paths (car flycheck-dmd-include-path) expected)))))
+  (with-sandbox fldd--sandbox-path
+    (write-dub-file "package.json" fldd--sandbox-path)
+    (flycheck-dmd-dub-set-include-path)
+    (should (equal (length flycheck-dmd-include-path) 1))
+    (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))))
 
 (ert-deftest test-fldd-set-include-path-dub-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
-  (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path))
-        (expected "~/.dub/packages/cerealed-master"))
-    (with-sandbox sandbox-path
-      (write-dub-file "dub.json" sandbox-path)
-      (flycheck-dmd-dub-set-include-path)
-      (should (equal (length flycheck-dmd-include-path) 1))
-      (should (equal-paths (car flycheck-dmd-include-path) expected)))))
+  (with-sandbox fldd--sandbox-path
+    (write-dub-file "dub.json" fldd--sandbox-path)
+    (flycheck-dmd-dub-set-include-path)
+    (should (equal (length flycheck-dmd-include-path) 1))
+    (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))))
 
 (ert-deftest test-fldd-set-include-path-wrong-file ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
-  (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path)))
-    (with-sandbox sandbox-path
-      (write-dub-file "foo.json" sandbox-path)
-      (flycheck-dmd-dub-set-include-path)
-      (should (equal flycheck-dmd-include-path nil)))))
+  (with-sandbox fldd--sandbox-path
+    (write-dub-file "foo.json" fldd--sandbox-path)
+    (flycheck-dmd-dub-set-include-path)
+    (should (equal flycheck-dmd-include-path nil))))
 
 
 
