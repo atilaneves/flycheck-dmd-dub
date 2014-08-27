@@ -24,10 +24,11 @@
 
 ;;; Code:
 
-; make sure all packages are found (flycheck-dmd-dub and flycheck)
-(add-to-list 'load-path (expand-file-name ".." (file-name-directory load-file-name)))
-(let ((default-directory "~/.emacs.d/elpa/"))
-  (normal-top-level-add-subdirs-to-load-path))
+(require 'f)
+
+(defvar fldd-test-path (f-dirname load-file-name))
+(defvar fldd-root-path (f-parent fldd-test-path))
+(add-to-list 'load-path fldd-root-path)
 
 (require 'ert)
 (require 'flycheck-dmd-dub)
