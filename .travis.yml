@@ -10,4 +10,4 @@ script:
   - echo "(require 'package)\n" > $HOME/.emacs
   - echo "(setq package-archieves  '((\"melpa\" . \"http://melpa.milkbox.net/packages/\")))" >> $HOME/.emacs
   - echo "(or (package-installed-p 'flycheck) (package-install 'flycheck))" >> $HOME/.emacs
-  - emacs24 -batch -l ert -l flycheck-l flycheck-dmd-dub/tests/flycheck-dmd-dub-test.el -f ert-run-tests-batch-and-exit
+  - emacs24 -batch -l ert -l flycheck flycheck-dmd-dub/tests/flycheck-dmd-dub-test.el -f ert-run-tests-batch-and-exit
