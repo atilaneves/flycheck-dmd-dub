@@ -28,6 +28,7 @@
   "Evaluate BODY in an empty temporary directory."
   `(let* ((root-sandbox-path (expand-file-name "sandbox" fldd-test-path))
           (default-directory root-sandbox-path))
+     (setq flycheck-dmd-include-path nil)
      (when (f-dir? root-sandbox-path)
        (f-delete root-sandbox-path :force))
      (f-mkdir root-sandbox-path)
@@ -38,19 +39,13 @@
   (equal (directory-file-name (file-truename path1))
          (directory-file-name (file-truename path2))))
 
-(ert-deftest test-fldd-get-project-dir ()
-  "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
-  (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path)))
-    (with-sandbox sandbox-path
-      (f-touch (expand-file-name "dub.json" sandbox-path))
-      (should (equal-paths (fldd--get-project-dir) sandbox-path)))
-
-    (with-sandbox sandbox-path
-      (f-touch (expand-file-name "package.json" sandbox-path))
-      (should (equal-paths (fldd--get-project-dir) sandbox-path)))
-
-    (with-sandbox sandbox-path
-      (should (equal (fldd--get-project-dir) nil)))))
+(defun write-dub-file (name path)
+  "Write the NAME dub file in PATH."
+  (f-write-text "{
+\"name\": \"test_project\",
+\"targetType\": \"executable\",
+\"dependencies\": { \"cerealed\": \"~master\" }
+}" 'utf-8 (expand-file-name name path)))
 
 
 (ert-deftest test-fldd-set-include-path ()
@@ -58,14 +53,23 @@
   (let ((sandbox-path (expand-file-name "sandbox" fldd-test-path))
         (expected "~/.dub/packages/cerealed-master"))
     (with-sandbox sandbox-path
-      (f-write-text "{
-\"name\": \"test_project\",
-\"targetType\": \"executable\",
-\"dependencies\": { \"cerealed\": \"~master\" }
-}" 'utf-8 (expand-file-name "dub.json" sandbox-path))
+      (write-dub-file "dub.json" sandbox-path)
       (flycheck-dmd-dub-set-include-path)
       (should (equal (length flycheck-dmd-include-path) 1))
-      (should (equal-paths (car flycheck-dmd-include-path) expected)))))
+      (should (equal-paths (car flycheck-dmd-include-path) expected)))
+
+    (with-sandbox sandbox-path
+      (write-dub-file "package.json" sandbox-path)
+      (flycheck-dmd-dub-set-include-path)
+      (should (equal (length flycheck-dmd-include-path) 1))
+      (should (equal-paths (car flycheck-dmd-include-path) expected)))
+
+    (with-sandbox sandbox-path
+      (write-dub-file "foo.json" sandbox-path)
+      (flycheck-dmd-dub-set-include-path)
+      (should (equal flycheck-dmd-include-path nil)))))
+
+
 (provide 'flycheck-dmd-dub-file-test)
 
 ;;; flycheck-dmd-dub-file-test.el ends here
