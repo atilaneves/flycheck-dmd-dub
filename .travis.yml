@@ -16,4 +16,4 @@ env:
   - EVM_EMACS=emacs-24.2-bin
 script:
   - emacs --version
-  - cask exec ert-runner test/flycheck-dmd-dub-pure-test.el
+  - make test
