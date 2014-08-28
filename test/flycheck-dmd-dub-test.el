@@ -26,8 +26,8 @@
 
 (require 'f)
 
-(setq fldd-test-path (f-dirname load-file-name))
-(setq fldd-root-path (f-parent fldd-test-path))
+(defvar fldd-test-path (f-dirname load-file-name))
+(defvar fldd-root-path (f-parent fldd-test-path))
 (add-to-list 'load-path fldd-root-path)
 
 (require 'ert)
