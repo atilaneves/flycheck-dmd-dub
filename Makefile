@@ -10,7 +10,7 @@ test: clean-elc
 	${MAKE} clean-elc
 
 unit:
-	${CASK} exec ert-runner
+	${CASK} exec ert-runner test/flycheck-dmd-dub-pure-test.el
 
 compile:
 	${CASK} exec ${EMACS} -Q -batch -f batch-byte-compile flycheck-dmd-dub.el
