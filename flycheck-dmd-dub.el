@@ -106,9 +106,20 @@ other lines besides the json object."
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
-  (let ((package-json-dir (locate-dominating-file default-directory "dub.json"))
-        (dub-json-dir (locate-dominating-file default-directory "package.json")))
+  (let ((package-json-dir (fldd--locate-topmost "dub.json"))
+        (dub-json-dir (fldd--locate-topmost "package.json")))
     (or dub-json-dir package-json-dir)))
+
+(defun fldd--locate-topmost (file-name)
+  "Locate the topmost FILE-NAME."
+  (fldd--locate-topmost-impl file-name default-directory nil))
+
+(defun fldd--locate-topmost-impl (file-name dir last-found)
+  "Locate the topmost FILE-NAME from DIR using LAST-FOUND as a 'plan B'."
+  (let ((new-dir (locate-dominating-file dir file-name)))
+    (if new-dir
+        (fldd--locate-topmost-impl file-name (expand-file-name ".." new-dir) new-dir)
+      last-found)))
 
 
 (defun fldd--get-dub-package-dirs ()
