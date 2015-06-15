@@ -65,12 +65,12 @@
                                ((importPaths . ["lefoo"]) (path . "/usr/bin"))]))
                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
-;; (ert-deftest test-fldd--pkgs-to-string-imports ()
-;;   "Test that getting all string import directories for all packages works."
-;;   (should (equal (fldd--pkgs-to-dir-names
-;;                   '(packages . [((stringImportPaths . ["src" "tests"]) (path . "/foo/bar"))
-;;                                 ((stringImportPaths . ["lefoo"]) (path . "/usr/bin"))]))
-;;                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
+(ert-deftest test-fldd--pkgs-to-string-imports ()
+  "Test that getting all string import directories for all packages works."
+  (should (equal (fldd--pkgs-to-string-import-paths
+                  '(packages . [((stringImportPaths . ["src" "tests"]) (path . "/foo/bar"))
+                                ((stringImportPaths . ["lefoo"]) (path . "/usr/bin"))]))
+                 '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
 
 (ert-deftest test-fldd--get-dub-package-dirs-output ()
