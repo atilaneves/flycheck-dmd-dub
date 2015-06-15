@@ -106,6 +106,15 @@ brace are discarded before parsing."
          (packages (assq 'packages data)))
     (fldd--pkgs-to-dir-names packages)))
 
+(defun fldd--get-dub-package-string-import-paths-json (json)
+  "Get package directories from dub output.
+Return the directories where the packages are for the assoclist
+in this JSON string.  Any characters before the first opening
+brace are discarded before parsing."
+  (let* ((data (json-read-from-string json))
+         (packages (assq 'packages data)))
+    (fldd--pkgs-to-string-import-paths packages)))
+
 
 (defun fldd--get-dub-package-dirs-output (output)
   "Get package directories from OUTPUT from dub describe.
@@ -113,6 +122,11 @@ Normally that output is json but sometimes it might contain
 other lines besides the json object."
   (fldd--get-dub-package-dirs-json (substring output (string-match "{" output) (length output))))
 
+(defun fldd--get-dub-package-string-import-paths-output (output)
+  "Get package directories from OUTPUT from dub describe.
+Normally that output is json but sometimes it might contain
+other lines besides the json object."
+  (fldd--get-dub-package-string-import-paths-json (substring output (string-match "{" output) (length output))))
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
