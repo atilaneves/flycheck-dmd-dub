@@ -44,6 +44,7 @@
   (f-write-text "{
 \"name\": \"test_project\",
 \"targetType\": \"executable\",
+\"stringImportPaths\": [\"stringies\", \"otherstringies\"],
 \"dependencies\": { \"cerealed\": \"~master\" }
 }" 'utf-8 (expand-file-name name path)))
 
@@ -72,6 +73,17 @@
     (write-dub-file "foo.json" fldd--sandbox-path)
     (flycheck-dmd-dub-set-include-path)
     (should (equal flycheck-dmd-include-path nil))))
+
+;; (ert-deftest test-fldd-set-flags ()
+;;   "Tests that calling the real-life function with a DUB project sets the flags correctly"
+;;   (with-sandbox fldd--sandbox-path
+;;                 (write-dub-file "dub.json" fldd--sandbox-path)
+;;                 (flycheck-dmd-dub-set-variables)
+;;                 (should (equal (length flycheck-dmd-include-path) 1))
+;;                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))
+;;                 (should (equal (length flycheck-dmd-flags) 2))
+;;                 (should (equal-paths (car flycheck-dmd-flags) (expand-file-name "stringies" fldd--sandbox-path)))
+;;                 (should (equal-paths (car (cdr flycheck-dmd-flags)) (expand-file-name "otherstringies" fldd--sandbox-path)))))
 
 
 

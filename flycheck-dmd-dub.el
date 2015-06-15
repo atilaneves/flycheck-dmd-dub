@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.7
-;; Package-Requires: ((flycheck "0.17"))
+;; Version: 0.8
+;; Package-Requires: ((flycheck "0.24"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
 
@@ -151,13 +151,29 @@ other lines besides the json object."
   (let ((default-directory (fldd--get-project-dir)))
     (fldd--get-dub-package-dirs-output (shell-command-to-string "dub describe"))))
 
+(defun fldd--get-dub-string-import-paths ()
+  "Get package directories."
+  (let ((default-directory (fldd--get-project-dir)))
+    (fldd--get-dub-package-string-import-paths-output (shell-command-to-string "dub describe"))))
+
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
   "Set `flycheck-dmd-include-path' from dub info if available."
   (let* ((basedir (fldd--get-project-dir)))
-      (when basedir
-        (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
+    (when basedir
+      (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
+
+;;;###autoload
+(defun flycheck-dmd-dub-set-variables ()
+  "Set all flycheck-dmd variables."
+  (let* ((basedir (fldd--get-project-dir)))
+    (when basedir
+      (let* ((output (shell-command-to-string "dub describe"))
+             (import-paths (fldd--get-dub-package-dirs-output output))
+             (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
+        (setq flycheck-dmd-include-path import-paths)
+        (setq flycheck-dmd-flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths))))))
 
 
 (provide 'flycheck-dmd-dub)
