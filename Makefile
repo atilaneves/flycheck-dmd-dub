@@ -5,6 +5,7 @@ all: test
 
 test: clean-elc
 	${MAKE} unit
+	${CASK} exec ert-runner test/flycheck-dmd-dub-file-test.el
 	${MAKE} compile
 	${MAKE} unit
 	${MAKE} clean-elc
