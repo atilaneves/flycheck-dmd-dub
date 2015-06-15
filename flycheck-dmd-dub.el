@@ -74,6 +74,12 @@ PKG is a package name such as 'cerealed': '~master'."
         (path (cdr (assq 'path pkg))))
     (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
 
+(defun fldd--pkg-to-string-import-paths (pkg)
+  "Return a directory name for the assoc list PKG."
+  (let ((import-paths (cdr (assq 'stringImportPaths pkg)))
+        (path (cdr (assq 'path pkg))))
+    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
+
 
 (defun fldd--flatten(x)
   (cond ((null x) nil)

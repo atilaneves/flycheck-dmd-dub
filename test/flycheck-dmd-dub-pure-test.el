@@ -40,12 +40,21 @@
 
 
 (ert-deftest test-fldd--pkg-to-dir-names ()
-  "Test that a correct dir name is return for one package."
+  "Test that a correct dir name is returned for one package."
   (should (equal (fldd--pkg-to-dir-names '((importPaths . ["source"]) (path . "/usr/bin")))
                 '("/usr/bin/source")))
   (should (equal (fldd--pkg-to-dir-names '((importPaths . ["."]) (path . "/usr/bin")))
                  '("/usr/bin")))
   (should (equal (fldd--pkg-to-dir-names '((importPaths . ["." "source"]) (path . "/foo/bar")))
+                 '("/foo/bar" "/foo/bar/source"))))
+
+(ert-deftest test-fldd--pkg-to-string-import-paths ()
+  "Test that a correct string import path is returned for one package."
+  (should (equal (fldd--pkg-to-string-import-paths '((stringImportPaths . ["source"]) (path . "/usr/bin")))
+                 '("/usr/bin/source")))
+  (should (equal (fldd--pkg-to-string-import-paths '((stringImportPaths . ["."]) (path . "/usr/bin")))
+                 '("/usr/bin")))
+  (should (equal (fldd--pkg-to-string-import-paths '((stringImportPaths . ["." "source"]) (path . "/foo/bar")))
                  '("/foo/bar" "/foo/bar/source"))))
 
 
@@ -55,6 +64,13 @@
                   '(packages . [((importPaths . ["src" "tests"]) (path . "/foo/bar"))
                                ((importPaths . ["lefoo"]) (path . "/usr/bin"))]))
                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
+
+;; (ert-deftest test-fldd--pkgs-to-string-imports ()
+;;   "Test that getting all string import directories for all packages works."
+;;   (should (equal (fldd--pkgs-to-dir-names
+;;                   '(packages . [((stringImportPaths . ["src" "tests"]) (path . "/foo/bar"))
+;;                                 ((stringImportPaths . ["lefoo"]) (path . "/usr/bin"))]))
+;;                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
 
 (ert-deftest test-fldd--get-dub-package-dirs-output ()
