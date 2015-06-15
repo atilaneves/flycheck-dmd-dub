@@ -67,18 +67,19 @@ PKG is a package name such as 'cerealed': '~master'."
         (pkg-suffix (fldd--dub-pkg-version-to-suffix (cdr pkg))))
     (concat (fldd--dub-pkgs-dir) pkg-name pkg-suffix)))
 
+(defun fldd--pkg-to-path-key (pkg key)
+  "Take a PKG assoc list and return the value for KEY."
+  (let ((import-paths (cdr (assq key pkg)))
+        (path (cdr (assq 'path pkg))))
+    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
 
 (defun fldd--pkg-to-dir-names (pkg)
   "Return a directory name for the assoc list PKG."
-  (let ((import-paths (cdr (assq 'importPaths pkg)))
-        (path (cdr (assq 'path pkg))))
-    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
+  (fldd--pkg-to-path-key pkg 'importPaths))
 
 (defun fldd--pkg-to-string-import-paths (pkg)
   "Return a directory name for the assoc list PKG."
-  (let ((import-paths (cdr (assq 'stringImportPaths pkg)))
-        (path (cdr (assq 'path pkg))))
-    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
+  (fldd--pkg-to-path-key pkg 'stringImportPaths))
 
 
 (defun fldd--flatten(x)
