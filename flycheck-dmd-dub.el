@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.8
+;; Version: 0.9
 ;; Package-Requires: ((flycheck "0.24"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
@@ -169,7 +169,8 @@ other lines besides the json object."
   "Set all flycheck-dmd variables."
   (let* ((basedir (fldd--get-project-dir)))
     (when basedir
-      (let* ((output (shell-command-to-string "dub describe"))
+      (let* ((default-directory basedir)
+             (output (shell-command-to-string "dub describe"))
              (import-paths (fldd--get-dub-package-dirs-output output))
              (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
         (setq flycheck-dmd-include-path import-paths)
