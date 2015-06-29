@@ -174,7 +174,11 @@ other lines besides the json object."
              (import-paths (fldd--get-dub-package-dirs-output output))
              (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
         (setq flycheck-dmd-include-path import-paths)
-        (setq flycheck-dmd-flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths))))))
+        (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
+          (cond ((symbolp 'flycheck-dmd-flags)
+                 (setq flycheck-dmd-flags flags))
+                ((symbolp 'flycheck-dmd-args)
+                 (setq flycheck-dmd-args flags))))))))
 
 
 (provide 'flycheck-dmd-dub)
