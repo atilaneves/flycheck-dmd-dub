@@ -175,10 +175,9 @@ other lines besides the json object."
              (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
         (setq flycheck-dmd-include-path import-paths)
         (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-          (cond ((symbolp 'flycheck-dmd-flags)
-                 (setq flycheck-dmd-flags flags))
-                ((symbolp 'flycheck-dmd-args)
-                 (setq flycheck-dmd-args flags))))))))
+          (if (version> (flycheck-version) "0.23")
+              (setq flycheck-dmd-args flags)
+            (setq flycheck-dmd-flags flags)))))))
 
 
 (provide 'flycheck-dmd-dub)
