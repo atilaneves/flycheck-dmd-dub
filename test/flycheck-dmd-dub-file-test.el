@@ -36,8 +36,8 @@
 
 (defun equal-paths (path1 path2)
   "If PATH1 is the same as PATH2."
-  (equal (directory-file-name (file-truename path1))
-         (directory-file-name (file-truename path2))))
+  (equal (directory-file-name (expand-file-name (file-truename path1)))
+         (directory-file-name (expand-file-name (file-truename path2)))))
 
 (defun write-dub-file (name path)
   "Write the NAME dub file in PATH."
@@ -54,18 +54,16 @@
 (ert-deftest test-fldd-set-include-path-package-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-    (write-dub-file "package.json" fldd--sandbox-path)
-    (flycheck-dmd-dub-set-include-path)
-    (should (equal (length flycheck-dmd-include-path) 1))
-    (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))))
+                (write-dub-file "package.json" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-include-path)
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
 
 (ert-deftest test-fldd-set-include-path-dub-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-    (write-dub-file "dub.json" fldd--sandbox-path)
-    (flycheck-dmd-dub-set-include-path)
-    (should (equal (length flycheck-dmd-include-path) 1))
-    (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))))
+                (write-dub-file "dub.json" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-include-path)
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
 
 (ert-deftest test-fldd-set-include-path-wrong-file ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
