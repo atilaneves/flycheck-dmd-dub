@@ -41,13 +41,14 @@
 
 (defun write-dub-file (name path)
   "Write the NAME dub file in PATH."
-  (f-write-text "{
+  (let ((path (expand-file-name name path)))
+    (f-write-text "{
 \"name\": \"test_project\",
-\"targetType\": \"executable\",
+\"targetType\": \"none\",
 \"stringImportPaths\": [\"stringies\", \"otherstringies\"],
 \"dependencies\": { \"cerealed\": \"~master\" }
-}" 'utf-8 (expand-file-name name path)))
-
+}\n" 'utf-8 path))
+  )
 
 (defvar fldd--sandbox-path (expand-file-name "sandbox" fldd-test-path))
 
@@ -56,6 +57,7 @@
   (with-sandbox fldd--sandbox-path
                 (write-dub-file "package.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
+                (should (not (equal flycheck-dmd-include-path nil)))
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
 
 (ert-deftest test-fldd-set-include-path-dub-json ()
@@ -65,12 +67,13 @@
                 (flycheck-dmd-dub-set-include-path)
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
 
+
 (ert-deftest test-fldd-set-include-path-wrong-file ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-    (write-dub-file "foo.json" fldd--sandbox-path)
-    (flycheck-dmd-dub-set-include-path)
-    (should (equal flycheck-dmd-include-path nil))))
+                (write-dub-file "foo.json" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-include-path)
+                (should (equal flycheck-dmd-include-path nil))))
 
 ;; (ert-deftest test-fldd-set-flags ()
 ;;   "Tests that calling the real-life function with a DUB project sets the flags correctly"
@@ -79,7 +82,7 @@
 ;;                 (flycheck-dmd-dub-set-variables)
 ;;                 (should (equal (length flycheck-dmd-include-path) 1))
 ;;                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))
-;;                 (should (equal (length flycheck-dmd-flags) 2))
+;;                 (should (equal (length flycheck-dmd-flags) 1))
 ;;                 (should (equal-paths (car flycheck-dmd-flags) (expand-file-name "stringies" fldd--sandbox-path)))
 ;;                 (should (equal-paths (car (cdr flycheck-dmd-flags)) (expand-file-name "otherstringies" fldd--sandbox-path)))))
 

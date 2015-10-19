@@ -149,12 +149,16 @@ other lines besides the json object."
 (defun fldd--get-dub-package-dirs ()
   "Get package directories."
   (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-dirs-output (shell-command-to-string "dub describe"))))
+    (fldd--get-dub-package-dirs-output (fldd--get-dub-describe-output))))
 
 (defun fldd--get-dub-string-import-paths ()
   "Get package directories."
   (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-string-import-paths-output (shell-command-to-string "dub describe"))))
+    (fldd--get-dub-package-string-import-paths-output (fldd--get-dub-describe-output))))
+
+(defun fldd--get-dub-describe-output ()
+  "Return the output from dub with package description."
+  (shell-command-to-string "dub describe"))
 
 
 ;;;###autoload
