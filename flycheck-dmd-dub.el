@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.9
+;; Version: 0.10
 ;; Package-Requires: ((flycheck "0.24"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
@@ -130,9 +130,10 @@ other lines besides the json object."
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
-  (let ((package-json-dir (fldd--locate-topmost "dub.json"))
-        (dub-json-dir (fldd--locate-topmost "package.json")))
-    (or dub-json-dir package-json-dir)))
+  (let ((dub-sdl-dir (fldd--locate-topmost "dub.sdl"))
+        (dub-json-dir (fldd--locate-topmost "dub.json"))
+        (package-json-dir (fldd--locate-topmost "package.json")))
+    (or dub-sdl-dir dub-json-dir package-json-dir)))
 
 (defun fldd--locate-topmost (file-name)
   "Locate the topmost FILE-NAME."

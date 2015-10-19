@@ -39,7 +39,7 @@
   (equal (directory-file-name (expand-file-name (file-truename path1)))
          (directory-file-name (expand-file-name (file-truename path2)))))
 
-(defun write-dub-file (name path)
+(defun write-json-file (name path)
   "Write the NAME dub file in PATH."
   (let ((path (expand-file-name name path)))
     (f-write-text "{
@@ -50,12 +50,23 @@
 }\n" 'utf-8 path))
   )
 
+(defun write-sdl-file (name path)
+  "Write the NAME dub file in PATH."
+  (let ((path (expand-file-name name path)))
+    (f-write-text "name \"test_project\"
+targetType \"none\"
+stringImportPaths \"stringies\" \"otherstringies\"
+dependency \"cerealed\" version=\"~master\"
+
+" 'utf-8 path))
+  )
+
 (defvar fldd--sandbox-path (expand-file-name "sandbox" fldd-test-path))
 
 (ert-deftest test-fldd-set-include-path-package-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-                (write-dub-file "package.json" fldd--sandbox-path)
+                (write-json-file "package.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
                 (should (not (equal flycheck-dmd-include-path nil)))
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
@@ -63,7 +74,14 @@
 (ert-deftest test-fldd-set-include-path-dub-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-                (write-dub-file "dub.json" fldd--sandbox-path)
+                (write-json-file "dub.json" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-include-path)
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
+
+(ert-deftest test-fldd-set-include-path-dub-sdl ()
+  "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
+  (with-sandbox fldd--sandbox-path
+                (write-sdl-file "dub.sdl" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
 
@@ -71,14 +89,14 @@
 (ert-deftest test-fldd-set-include-path-wrong-file ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
-                (write-dub-file "foo.json" fldd--sandbox-path)
+                (write-json-file "foo.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
                 (should (equal flycheck-dmd-include-path nil))))
 
 ;; (ert-deftest test-fldd-set-flags ()
 ;;   "Tests that calling the real-life function with a DUB project sets the flags correctly"
 ;;   (with-sandbox fldd--sandbox-path
-;;                 (write-dub-file "dub.json" fldd--sandbox-path)
+;;                 (write-json-file "dub.json" fldd--sandbox-path)
 ;;                 (flycheck-dmd-dub-set-variables)
 ;;                 (should (equal (length flycheck-dmd-include-path) 1))
 ;;                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))
