@@ -19,6 +19,6 @@ Add this to your `.emacs` / `init.el`:
 Installation
 ------------
 
-Install from [MELPA](http://melpa.milkbox.net) or [MELPA Stable](http://melpa-stable.milkbox.net/) with:
+Install from [MELPA](https://melpa.org) or [MELPA Stable](https://stable.melpa.org/) with:
 
     M-x package-install RET flycheck-dmd-dub.
