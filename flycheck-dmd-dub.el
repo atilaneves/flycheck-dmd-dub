@@ -185,7 +185,7 @@ If FILE does not exist, return nil."
   "File to cache the result of dub describe.")
 
 ;;;###autoload
-(defcustom flycheck-dmd-dub-use-cache-p t
+(defcustom flycheck-dmd-dub-use-cache-p nil
   "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file.")
 
 ;;;###autoload
