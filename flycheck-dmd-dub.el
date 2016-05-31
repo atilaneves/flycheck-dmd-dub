@@ -184,9 +184,16 @@ If FILE does not exist, return nil."
 (defvar fldd--cache-file ".fldd.cache"
   "File to cache the result of dub describe.")
 
+(defgroup flycheck-dmd-dub nil
+  "Sets flycheck-dmd-include-paths from dub package information"
+  :prefix "flycheck-dmd-dub-"
+  :group 'flycheck)
+
 ;;;###autoload
 (defcustom flycheck-dmd-dub-use-cache-p nil
-  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file.")
+  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file."
+  :type 'boolean
+  :group 'flycheck-dmd-dub)
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
