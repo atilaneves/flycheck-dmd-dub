@@ -168,9 +168,25 @@ If FILE does not exist, return nil."
   (when (file-exists-p file)
     (nth 5 (file-attributes file))))
 
+(defun fldd--set-variables (import-paths string-import-paths)
+  "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
+  (setq flycheck-dmd-include-path import-paths)
+  (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
+    (setq flycheck-dmd-args flags)))
+
+(defun fldd--cache-is-updated-p ()
+  "Return non-nil if `fldd--cache-file' is up-to-date."
+  (let ((conf-timestamp (fldd--get-timestamp "dub.selections.json"))
+        (cache-timestamp (fldd--get-timestamp fldd--cache-file)))
+    (and conf-timestamp cache-timestamp
+         (time-less-p conf-timestamp cache-timestamp))))
+
 (defvar fldd--cache-file ".fldd.cache"
   "File to cache the result of dub describe.")
 
+;;;###autoload
+(defcustom flycheck-dmd-dub-use-cache-p t
+  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file.")
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
@@ -182,27 +198,25 @@ If FILE does not exist, return nil."
 ;;;###autoload
 (defun flycheck-dmd-dub-set-variables ()
   "Set all flycheck-dmd variables.
-It also outputs the values of `import-paths' and `string-import-paths' to `fldd--cache-file'
-to reuse the result of dub describe."
+It also outputs the values of `import-paths' and `string-import-paths'
+to `fldd--cache-file' to reuse the result of dub describe."
   (let* ((basedir (fldd--get-project-dir)))
     (when basedir
-      (let* ((default-directory basedir)
-             (conf-timestamp (fldd--get-timestamp "dub.selections.json"))
-             (cache-timestamp (fldd--get-timestamp fldd--cache-file)))
-        (when (or (not conf-timestamp) (not cache-timestamp)
-                  (time-less-p cache-timestamp conf-timestamp))
-          (let* ((output (shell-command-to-string "dub describe"))
-                 (import-paths (fldd--get-dub-package-dirs-output output))
-                 (string-import-paths (fldd--get-dub-package-string-import-paths-output output))
-                 (cache-text (with-output-to-string
-                                 (print `((import-paths . ,import-paths)
-                                          (string-import-paths . ,string-import-paths))))))
-            (f-write cache-text 'utf-8 fldd--cache-file)))
-        (mapc (lambda (lst) (set (car lst) (cdr lst)))
-              (read (f-read fldd--cache-file)))
-        (setq flycheck-dmd-include-path import-paths)
-        (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-          (setq flycheck-dmd-args flags))))))
+      (let* ((default-directory basedir))
+        (if (and flycheck-dmd-dub-use-cache-p (fldd--cache-is-updated-p))
+            (let* ((alist (read (f-read fldd--cache-file)))
+                   (import-paths (cdr (assq 'import-paths alist)))
+                   (string-import-paths (cdr (assq 'string-import-paths alist))))
+              (fldd--set-variables import-paths string-import-paths))
+            (let* ((output (shell-command-to-string "dub describe"))
+                   (import-paths (fldd--get-dub-package-dirs-output output))
+                   (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
+              (fldd--set-variables import-paths string-import-paths)
+              (when flycheck-dmd-dub-use-cache-p
+                (let ((cache-text (with-output-to-string
+                                      (print `((import-paths . ,import-paths)
+                                               (string-import-paths . ,string-import-paths))))))
+                  (f-write cache-text 'utf-8 fldd--cache-file)))))))))
 
 
 (provide 'flycheck-dmd-dub)
