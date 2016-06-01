@@ -4,7 +4,7 @@
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
 ;; Version: 0.10
-;; Package-Requires: ((flycheck "0.24"))
+;; Package-Requires: ((flycheck "0.24") (f "0.18.2"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
 
@@ -39,6 +39,7 @@
 
 (require 'json)
 (require 'flycheck)
+(require 'f)
 
 
 (defun fldd--dub-pkg-version-to-suffix (version)
@@ -161,6 +162,38 @@ other lines besides the json object."
   "Return the output from dub with package description."
   (shell-command-to-string "dub describe"))
 
+(defun fldd--get-timestamp (file)
+  "Return the timestamp of FILE.
+If FILE does not exist, return nil."
+  (when (file-exists-p file)
+    (nth 5 (file-attributes file))))
+
+(defun fldd--set-variables (import-paths string-import-paths)
+  "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
+  (setq flycheck-dmd-include-path import-paths)
+  (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
+    (setq flycheck-dmd-args flags)))
+
+(defun fldd--cache-is-updated-p ()
+  "Return non-nil if `fldd--cache-file' is up-to-date."
+  (let ((conf-timestamp (fldd--get-timestamp "dub.selections.json"))
+        (cache-timestamp (fldd--get-timestamp fldd--cache-file)))
+    (and conf-timestamp cache-timestamp
+         (time-less-p conf-timestamp cache-timestamp))))
+
+(defvar fldd--cache-file ".fldd.cache"
+  "File to cache the result of dub describe.")
+
+(defgroup flycheck-dmd-dub nil
+  "Sets flycheck-dmd-include-paths from dub package information"
+  :prefix "flycheck-dmd-dub-"
+  :group 'flycheck)
+
+;;;###autoload
+(defcustom flycheck-dmd-dub-use-cache-p nil
+  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file."
+  :type 'boolean
+  :group 'flycheck-dmd-dub)
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
@@ -171,16 +204,26 @@ other lines besides the json object."
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-variables ()
-  "Set all flycheck-dmd variables."
+  "Set all flycheck-dmd variables.
+It also outputs the values of `import-paths' and `string-import-paths'
+to `fldd--cache-file' to reuse the result of dub describe."
   (let* ((basedir (fldd--get-project-dir)))
     (when basedir
-      (let* ((default-directory basedir)
-             (output (shell-command-to-string "dub describe"))
-             (import-paths (fldd--get-dub-package-dirs-output output))
-             (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
-        (setq flycheck-dmd-include-path import-paths)
-        (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-          (setq flycheck-dmd-args flags))))))
+      (let* ((default-directory basedir))
+        (if (and flycheck-dmd-dub-use-cache-p (fldd--cache-is-updated-p))
+            (let* ((alist (read (f-read fldd--cache-file)))
+                   (import-paths (cdr (assq 'import-paths alist)))
+                   (string-import-paths (cdr (assq 'string-import-paths alist))))
+              (fldd--set-variables import-paths string-import-paths))
+            (let* ((output (shell-command-to-string "dub describe"))
+                   (import-paths (fldd--get-dub-package-dirs-output output))
+                   (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
+              (fldd--set-variables import-paths string-import-paths)
+              (when flycheck-dmd-dub-use-cache-p
+                (let ((cache-text (with-output-to-string
+                                      (print `((import-paths . ,import-paths)
+                                               (string-import-paths . ,string-import-paths))))))
+                  (f-write cache-text 'utf-8 fldd--cache-file)))))))))
 
 
 (provide 'flycheck-dmd-dub)
