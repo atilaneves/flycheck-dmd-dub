@@ -172,7 +172,7 @@ If FILE does not exist, return nil."
   "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
   (setq flycheck-dmd-include-path import-paths)
   (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-    (setq flycheck-dmd-args flags)))
+    (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
 
 (defun fldd--cache-is-updated-p ()
   "Return non-nil if `fldd--cache-file' is up-to-date."
