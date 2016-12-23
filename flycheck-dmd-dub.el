@@ -41,6 +41,10 @@
 (require 'flycheck)
 (require 'f)
 
+(defvar
+  fldd-no-recurse-dir
+  nil
+  "If set, will stop flycheck-dmd-dub from recursing upwards after finding the dub package root.")
 
 (defun fldd--dub-pkg-version-to-suffix (version)
   "From dub dependency to suffix for the package directory.
@@ -144,7 +148,9 @@ other lines besides the json object."
   "Locate the topmost FILE-NAME from DIR using LAST-FOUND as a 'plan B'."
   (let ((new-dir (locate-dominating-file dir file-name)))
     (if new-dir
-        (fldd--locate-topmost-impl file-name (expand-file-name ".." new-dir) new-dir)
+        (if fldd-no-recurse-dir
+            new-dir
+          (fldd--locate-topmost-impl file-name (expand-file-name ".." new-dir) new-dir))
       last-found)))
 
 
