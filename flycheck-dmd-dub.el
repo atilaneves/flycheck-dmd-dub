@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Atila Neves
 
 ;; Author:  Atila Neves <atila.neves@gmail.com>
-;; Version: 0.10
+;; Version: 0.11
 ;; Package-Requires: ((flycheck "0.24") (f "0.18.2"))
 ;; Keywords: languages
 ;; URL: http://github.com/atilaneves/flycheck-dmd-dub
@@ -102,22 +102,37 @@ PKG is a package name such as 'cerealed': '~master'."
   (fldd--flatten (mapcar #'fldd--pkg-to-string-import-paths (cdr pkgs))))
 
 
-(defun fldd--get-dub-package-dirs-json (json)
+(defun fldd--get-dub-package-dirs-json-string (json)
   "Get package directories from dub output.
 Return the directories where the packages are for the assoclist
 in this JSON string.  Any characters before the first opening
 brace are discarded before parsing."
-  (let* ((data (json-read-from-string json))
-         (packages (assq 'packages data)))
+  (let ((data (ignore-errors (json-read-from-string json))))
+    (and data (fldd--get-dub-package-dirs-json data))))
+
+(defun fldd--get-dub-package-dirs-json (json)
+  "Get package directories from dub output.
+Return the directories where the packages are for the assoclist
+in this JSON.  Any characters before the first opening
+brace are discarded before parsing."
+  (let ((packages (assq 'packages json)))
     (fldd--pkgs-to-dir-names packages)))
+
+
+(defun fldd--get-dub-package-string-import-paths-json-string (json)
+  "Get package directories from dub output.
+Return the directories where the packages are for the assoclist
+in this JSON string.  Any characters before the first opening
+brace are discarded before parsing."
+  (let ((data (ignore-errors (json-read-from-string json))))
+    (and data (fldd--get-dub-package-string-import-paths-json data))))
 
 (defun fldd--get-dub-package-string-import-paths-json (json)
   "Get package directories from dub output.
 Return the directories where the packages are for the assoclist
-in this JSON string.  Any characters before the first opening
+in this JSON.  Any characters before the first opening
 brace are discarded before parsing."
-  (let* ((data (json-read-from-string json))
-         (packages (assq 'packages data)))
+  (let ((packages (assq 'packages json)))
     (fldd--pkgs-to-string-import-paths packages)))
 
 
@@ -125,13 +140,17 @@ brace are discarded before parsing."
   "Get package directories from OUTPUT from dub describe.
 Normally that output is json but sometimes it might contain
 other lines besides the json object."
-  (fldd--get-dub-package-dirs-json (substring output (string-match "{" output) (length output))))
+  (fldd--get-dub-package-dirs-json-string (fldd--json-normalise output)))
 
 (defun fldd--get-dub-package-string-import-paths-output (output)
   "Get package directories from OUTPUT from dub describe.
 Normally that output is json but sometimes it might contain
 other lines besides the json object."
-  (fldd--get-dub-package-string-import-paths-json (substring output (string-match "{" output) (length output))))
+  (fldd--get-dub-package-string-import-paths-json-string (fldd--json-normalise output)))
+
+(defun fldd--json-normalise (output)
+  "Normalises OUTPUT to it's valid JSON."
+  (substring output (string-match "{" output) (length output)))
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
@@ -176,6 +195,7 @@ If FILE does not exist, return nil."
 
 (defun fldd--set-variables (import-paths string-import-paths)
   "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
+  (message "settings imports to %s and strings to %s" import-paths string-import-paths)
   (setq flycheck-dmd-include-path import-paths)
   (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
     (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
@@ -221,15 +241,17 @@ to `fldd--cache-file' to reuse the result of dub describe."
                    (import-paths (cdr (assq 'import-paths alist)))
                    (string-import-paths (cdr (assq 'string-import-paths alist))))
               (fldd--set-variables import-paths string-import-paths))
-            (let* ((output (shell-command-to-string "dub describe"))
-                   (import-paths (fldd--get-dub-package-dirs-output output))
-                   (string-import-paths (fldd--get-dub-package-string-import-paths-output output)))
-              (fldd--set-variables import-paths string-import-paths)
-              (when flycheck-dmd-dub-use-cache-p
-                (let ((cache-text (with-output-to-string
-                                      (print `((import-paths . ,import-paths)
-                                               (string-import-paths . ,string-import-paths))))))
-                  (f-write cache-text 'utf-8 fldd--cache-file)))))))))
+          (let* ((output (shell-command-to-string "dub describe"))
+                 (json-string (fldd--json-normalise output))
+                 (json (json-read-from-string json-string))
+                 (import-paths (fldd--get-dub-package-dirs-json json))
+                 (string-import-paths (fldd--get-dub-package-string-import-paths-json json)))
+            (fldd--set-variables import-paths string-import-paths)
+            (when flycheck-dmd-dub-use-cache-p
+              (let ((cache-text (with-output-to-string
+                                  (print `((import-paths . ,import-paths)
+                                           (string-import-paths . ,string-import-paths))))))
+                (f-write cache-text 'utf-8 fldd--cache-file)))))))))
 
 
 (provide 'flycheck-dmd-dub)
