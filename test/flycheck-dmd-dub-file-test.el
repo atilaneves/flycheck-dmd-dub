@@ -69,21 +69,21 @@ dependency \"cerealed\" version=\"~master\"
                 (write-json-file "package.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
                 (should (not (equal flycheck-dmd-include-path nil)))
-                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))))
 
 (ert-deftest test-fldd-set-include-path-dub-json ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
                 (write-json-file "dub.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
-                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))))
 
 (ert-deftest test-fldd-set-include-path-dub-sdl ()
   "Tests that calling the real-life function with a DUB project sets the variable(s) correctly"
   (with-sandbox fldd--sandbox-path
                 (write-sdl-file "dub.sdl" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-include-path)
-                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/src"))))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))))
 
 
 (ert-deftest test-fldd-set-include-path-wrong-file ()
@@ -93,16 +93,17 @@ dependency \"cerealed\" version=\"~master\"
                 (flycheck-dmd-dub-set-include-path)
                 (should (equal flycheck-dmd-include-path nil))))
 
-;; (ert-deftest test-fldd-set-flags ()
-;;   "Tests that calling the real-life function with a DUB project sets the flags correctly"
-;;   (with-sandbox fldd--sandbox-path
-;;                 (write-json-file "dub.json" fldd--sandbox-path)
-;;                 (flycheck-dmd-dub-set-variables)
-;;                 (should (equal (length flycheck-dmd-include-path) 1))
-;;                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master"))
-;;                 (should (equal (length flycheck-dmd-flags) 1))
-;;                 (should (equal-paths (car flycheck-dmd-flags) (expand-file-name "stringies" fldd--sandbox-path)))
-;;                 (should (equal-paths (car (cdr flycheck-dmd-flags)) (expand-file-name "otherstringies" fldd--sandbox-path)))))
+(ert-deftest test-fldd-set-flags ()
+  "Tests that calling the real-life function with a DUB project sets the flags correctly"
+  (with-sandbox fldd--sandbox-path
+                (write-json-file "dub.json" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-variables)
+                (should (equal (length flycheck-dmd-include-path) 2))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+                (should (equal (length flycheck-dmd-args) 3))
+                (should (equal (nth 0 flycheck-dmd-args) "-unittest"))
+                (should (equal-paths (nth 1 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
+                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
 
 
