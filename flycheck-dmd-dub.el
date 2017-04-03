@@ -195,7 +195,6 @@ If FILE does not exist, return nil."
 
 (defun fldd--set-variables (import-paths string-import-paths)
   "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
-  (message "settings imports to %s and strings to %s" import-paths string-import-paths)
   (setq flycheck-dmd-include-path import-paths)
   (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
     (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
