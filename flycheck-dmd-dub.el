@@ -232,6 +232,7 @@ If FILE does not exist, return nil."
   "Set all flycheck-dmd variables.
 It also outputs the values of `import-paths' and `string-import-paths'
 to `fldd--cache-file' to reuse the result of dub describe."
+  (interactive)
   (let* ((basedir (fldd--get-project-dir)))
     (when basedir
       (let* ((default-directory basedir))
