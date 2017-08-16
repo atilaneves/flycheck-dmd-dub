@@ -98,7 +98,7 @@ dependency \"cerealed\" version=\"~master\"
   (with-sandbox fldd--sandbox-path
                 (write-json-file "dub.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-variables)
-                (should (equal (length flycheck-dmd-include-path) 2))
+                (should (equal (length flycheck-dmd-include-path) 3))
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
                 (should (equal (length flycheck-dmd-args) 3))
                 (should (equal (nth 0 flycheck-dmd-args) "-unittest"))
