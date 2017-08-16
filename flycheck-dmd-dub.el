@@ -195,6 +195,8 @@ If FILE does not exist, return nil."
 
 (defun fldd--set-variables (import-paths string-import-paths)
   "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
+  (make-local-variable 'flycheck-dmd-include-path)
+  (make-local-variable 'flycheck-dmd-args)
   (setq flycheck-dmd-include-path import-paths)
   (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
     (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
@@ -225,6 +227,7 @@ If FILE does not exist, return nil."
   "Set `flycheck-dmd-include-path' from dub info if available."
   (let* ((basedir (fldd--get-project-dir)))
     (when basedir
+      (make-local-variable 'flycheck-dmd-include-path)
       (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
 
 ;;;###autoload
