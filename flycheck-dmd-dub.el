@@ -174,14 +174,20 @@ brace are discarded before parsing."
 
 (defun fldd--get-dub-describe-output ()
   "Return the output from dub with package description."
-  (let* (;;(configs-output (shell-command-to-string "dub --annotate build --print-configs --build=docs"))
-         ;;(has-unittest (string-match "  unittest" configs-output))
-         (has-unittest nil)
-         (raw-command (if has-unittest "dub describe -c unittest" "dub describe"))
-         (dub-selections-json (concat (fldd--get-project-dir) "dub.selections.json"))
-         (has-selections (file-exists-p dub-selections-json))
-         (command (if has-selections (concat raw-command " --nodeps") raw-command)))
-    (fldd--json-normalise (shell-command-to-string command))))
+  (let* ((raw-dub-cfgs-cmd "dub --annotate build --print-configs --build=docs")
+         (dub-cfgs-cmd (fldd--maybe-add-no-deps raw-dub-cfgs-cmd))
+         ;;(configs-output (shell-command-to-string dub-cfgs-cmd))
+         (configs-output "")
+         (has-unittest (string-match "  unittest" configs-output))
+         (raw-dub-desc-cmd (if has-unittest "dub describe -c unittest" "dub describe"))
+         (dub-desc-cmd (fldd--maybe-add-no-deps raw-dub-desc-cmd)))
+    (fldd--json-normalise (shell-command-to-string dub-desc-cmd))))
+
+(defun fldd--maybe-add-no-deps (raw-command)
+  "Add --nodeps to RAW-COMMAND if dub.selections.json exists."
+  (let* ((dub-selections-json (concat (fldd--get-project-dir) "dub.selections.json"))
+         (has-selections (file-exists-p dub-selections-json)))
+    (if has-selections (concat raw-command " --nodeps") raw-command)))
 
 (defun fldd--get-timestamp (file)
   "Return the timestamp of FILE.
