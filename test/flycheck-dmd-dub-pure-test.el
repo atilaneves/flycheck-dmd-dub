@@ -104,6 +104,5 @@
                  '("/foo/bar/source" "/blug/dlag/source")))
   )
 
-
 (provide 'flycheck-dmd-dub-test-pure)
 ;;; flycheck-dmd-dub-test-pure.el ends here

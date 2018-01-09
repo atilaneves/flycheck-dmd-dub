@@ -174,9 +174,13 @@ brace are discarded before parsing."
 
 (defun fldd--get-dub-describe-output ()
   "Return the output from dub with package description."
-  (let* ((configs-output (shell-command-to-string "dub --annotate build --print-configs --build=docs"))
-         (has-unittest (string-match "  unittest" configs-output))
-         (command (if has-unittest "dub describe -c unittest" "dub describe")))
+  (let* (;;(configs-output (shell-command-to-string "dub --annotate build --print-configs --build=docs"))
+         ;;(has-unittest (string-match "  unittest" configs-output))
+         (has-unittest nil)
+         (raw-command (if has-unittest "dub describe -c unittest" "dub describe"))
+         (dub-selections-json (concat (fldd--get-project-dir) "dub.selections.json"))
+         (has-selections (file-exists-p dub-selections-json))
+         (command (if has-selections (concat raw-command " --nodeps") raw-command)))
     (fldd--json-normalise (shell-command-to-string command))))
 
 (defun fldd--get-timestamp (file)

@@ -136,6 +136,7 @@ configuration \"unittest\" {
                 (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
 
+
 (provide 'flycheck-dmd-dub-file-test)
 
 ;;; flycheck-dmd-dub-file-test.el ends here
