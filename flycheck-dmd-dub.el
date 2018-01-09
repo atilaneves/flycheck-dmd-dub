@@ -238,9 +238,9 @@ If FILE does not exist, return nil."
 It also outputs the values of `import-paths' and `string-import-paths'
 to `fldd--cache-file' to reuse the result of dub describe."
   (interactive)
-  (let* ((basedir (fldd--get-project-dir)))
+  (let ((basedir (fldd--get-project-dir)))
     (when basedir
-      (let* ((default-directory basedir))
+      (let ((default-directory basedir))
         (if (and flycheck-dmd-dub-use-cache-p (fldd--cache-is-updated-p))
             (let* ((alist (read (f-read fldd--cache-file)))
                    (import-paths (cdr (assq 'import-paths alist)))
