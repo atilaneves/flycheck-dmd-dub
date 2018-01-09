@@ -136,18 +136,6 @@ brace are discarded before parsing."
     (fldd--pkgs-to-string-import-paths packages)))
 
 
-(defun fldd--get-dub-package-dirs-output (output)
-  "Get package directories from OUTPUT from dub describe.
-Normally that output is json but sometimes it might contain
-other lines besides the json object."
-  (fldd--get-dub-package-dirs-json-string (fldd--json-normalise output)))
-
-(defun fldd--get-dub-package-string-import-paths-output (output)
-  "Get package directories from OUTPUT from dub describe.
-Normally that output is json but sometimes it might contain
-other lines besides the json object."
-  (fldd--get-dub-package-string-import-paths-json-string (fldd--json-normalise output)))
-
 (defun fldd--json-normalise (output)
   "Normalises OUTPUT to it's valid JSON."
   (substring output (string-match "{" output) (length output)))
@@ -176,16 +164,20 @@ other lines besides the json object."
 (defun fldd--get-dub-package-dirs ()
   "Get package directories."
   (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-dirs-output (fldd--get-dub-describe-output))))
+    (fldd--get-dub-package-dirs-json-string (fldd--get-dub-describe-output))))
 
 (defun fldd--get-dub-string-import-paths ()
   "Get package directories."
   (let ((default-directory (fldd--get-project-dir)))
-    (fldd--get-dub-package-string-import-paths-output (fldd--get-dub-describe-output))))
+    (fldd--get-dub-package-string-import-paths-json-string (fldd--get-dub-describe-output))))
+
 
 (defun fldd--get-dub-describe-output ()
   "Return the output from dub with package description."
-  (shell-command-to-string "dub describe -c unittest"))
+  (let* ((configs-output (shell-command-to-string "dub --annotate build --print-configs --build=docs"))
+         (has-unittest (string-match "  unittest" configs-output))
+         (command (if has-unittest "dub describe -c unittest" "dub describe")))
+    (fldd--json-normalise (shell-command-to-string command))))
 
 (defun fldd--get-timestamp (file)
   "Return the timestamp of FILE.
@@ -199,7 +191,7 @@ If FILE does not exist, return nil."
   (make-local-variable 'flycheck-dmd-args)
   (setq flycheck-dmd-include-path import-paths)
   (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-    (setq flycheck-dmd-args flags)))
+    (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
 
 (defun fldd--cache-is-updated-p ()
   "Return non-nil if `fldd--cache-file' is up-to-date."
@@ -244,8 +236,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
                    (import-paths (cdr (assq 'import-paths alist)))
                    (string-import-paths (cdr (assq 'string-import-paths alist))))
               (fldd--set-variables import-paths string-import-paths))
-          (let* ((output (shell-command-to-string "dub describe"))
-                 (json-string (fldd--json-normalise output))
+          (let* ((json-string (fldd--get-dub-describe-output))
                  (json (json-read-from-string json-string))
                  (import-paths (fldd--get-dub-package-dirs-json json))
                  (string-import-paths (fldd--get-dub-package-string-import-paths-json json)))

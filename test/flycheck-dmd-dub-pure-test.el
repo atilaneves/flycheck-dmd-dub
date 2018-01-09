@@ -73,61 +73,6 @@
                  '("/foo/bar/src" "/foo/bar/tests" "/usr/bin/lefoo"))))
 
 
-(ert-deftest test-fldd--get-dub-package-dirs-output ()
-  "Test getting the package directories from a json string."
-  (should (equal (fldd--get-dub-package-dirs-output "{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output "{\"packages\": []}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "{\"packages\": [
-                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
-                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide\n{}") nil))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide
-{\"packages\": [{ \"path\": \"/foo/bar\", \"importPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-dirs-output
-                  "Invalid source/import path: /foo/bar/path
-                  {\"packages\": [
-                        { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
-                        { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
-                   ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  )
-
-(ert-deftest test-fldd--get-dub-package-string-imports-output ()
-  "Test getting the package directories from a json string."
-  (should (equal (fldd--get-dub-package-string-import-paths-output "{}") nil))
-  (should (equal (fldd--get-dub-package-string-import-paths-output "{\"packages\": []}") nil))
-  (should (equal (fldd--get-dub-package-string-import-paths-output
-                  "{\"packages\": [{ \"path\": \"/foo/bar\", \"stringImportPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-string-import-paths-output
-                  "{\"packages\": [
-                          { \"path\": \"/foo/bar/source\", \"stringImportPaths\": [\".\"]},
-                          { \"path\": \"/blug/dlag/\", \"stringImportPaths\": [\"source\"]}
-                     ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  (should (equal (fldd--get-dub-package-string-import-paths-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide\n{}") nil))
-  (should (equal (fldd--get-dub-package-string-import-paths-output
-                  "The following changes will be performed:\nFetch vibe-d >=0.7.17, userWide
-  {\"packages\": [{ \"path\": \"/foo/bar\", \"stringImportPaths\": [\".\"]}] } ")
-                 '("/foo/bar")))
-  (should (equal (fldd--get-dub-package-string-import-paths-output
-                  "Invalid source/import path: /foo/bar/path
-                    {\"packages\": [
-                          { \"path\": \"/foo/bar/source\", \"stringImportPaths\": [\".\"]},
-                          { \"path\": \"/blug/dlag/\", \"stringImportPaths\": [\"source\"]}
-                     ]}")
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  )
 
 (ert-deftest test-fldd--get-dub-package-dirs-json ()
   "Test getting the package directories from a json string."

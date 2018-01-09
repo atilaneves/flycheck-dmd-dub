@@ -61,6 +61,25 @@ dependency \"cerealed\" version=\"~master\"
 " 'utf-8 path))
   )
 
+(defun write-sdl-file-configs (name path)
+  "Write the NAME dub file in PATH."
+  (let ((path (expand-file-name name path)))
+    (f-write-text "name \"test_project\"
+targetType \"none\"
+stringImportPaths \"stringies\" \"otherstringies\"
+dependency \"cerealed\" version=\"~master\"
+configuration \"default\" {
+
+}
+
+configuration \"unittest\" {
+    versions \"testVersion\"
+}
+
+" 'utf-8 path))
+  )
+
+
 (defvar fldd--sandbox-path (expand-file-name "sandbox" fldd-test-path))
 
 (ert-deftest test-fldd-set-include-path-package-json ()
@@ -93,7 +112,7 @@ dependency \"cerealed\" version=\"~master\"
                 (flycheck-dmd-dub-set-include-path)
                 (should (equal flycheck-dmd-include-path nil))))
 
-(ert-deftest test-fldd-set-flags ()
+(ert-deftest test-fldd-set-flags-no-configs ()
   "Tests that calling the real-life function with a DUB project sets the flags correctly"
   (with-sandbox fldd--sandbox-path
                 (write-json-file "dub.json" fldd--sandbox-path)
@@ -105,6 +124,16 @@ dependency \"cerealed\" version=\"~master\"
                 (should (equal-paths (nth 1 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
                 (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
+(ert-deftest test-fldd-set-flags-configs ()
+  "Tests that calling the real-life function with a DUB project sets the flags correctly"
+  (with-sandbox fldd--sandbox-path
+                (write-sdl-file-configs "dub.sdl" fldd--sandbox-path)
+                (flycheck-dmd-dub-set-variables)
+                (should (equal (length flycheck-dmd-include-path) 3))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+                (should (equal (nth 0 flycheck-dmd-args) "-unittest"))
+                (should (equal-paths (nth 1 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
+                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
 
 (provide 'flycheck-dmd-dub-file-test)
