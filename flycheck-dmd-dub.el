@@ -40,6 +40,7 @@
 (require 'json)
 (require 'flycheck)
 (require 'f)
+(require 'cl-lib)
 
 (defvar
   fldd-no-recurse-dir
@@ -181,13 +182,52 @@ brace are discarded before parsing."
          (has-unittest-cfg (string-match "  unittest" configs-output))
          (raw-dub-desc-cmd (if has-unittest-cfg "dub describe -c unittest" "dub describe"))
          (dub-desc-cmd (fldd--maybe-add-no-deps raw-dub-desc-cmd)))
+    (fldd--message "Calling dub describe with '%s'" dub-desc-cmd)
     (fldd--json-normalise (shell-command-to-string dub-desc-cmd))))
 
 (defun fldd--maybe-add-no-deps (raw-command)
   "Add --nodeps to RAW-COMMAND if dub.selections.json exists."
   (let* ((dub-selections-json (concat (fldd--get-project-dir) "dub.selections.json"))
          (has-selections (file-exists-p dub-selections-json)))
-    (if has-selections (concat raw-command " --nodeps") raw-command)))
+    (if (not has-selections)
+        raw-command
+      ;; else
+      (let* ((selections (json-read-file dub-selections-json))
+             (dependencies (cdr (assoc 'versions selections)))
+             )
+        (if (fldd--packages-fetched? dependencies)
+            (concat raw-command " --nodeps --skip-registry=all")
+          raw-command)))))
+
+(defun fldd--message (str &rest vars)
+  "Output a message with STR and formatted by VARS."
+  (message (apply #'format (concat "flycheck-dmd-dub [%s]: " str) (cons (current-time-string) vars))))
+
+
+(defun fldd--packages-fetched? (dependencies)
+  "If all packages in DEPENDENCIES have been fetched."
+
+  (defun dependency-fetched? (dependency)
+    (let ((package (symbol-name (car dependency)))
+          (version (cdr dependency)))
+      (fldd--package-fetched? package version)))
+
+  (fldd--all (mapcar #'dependency-fetched? dependencies)))
+
+(defun fldd--all (lst)
+  "If all elements in LST are true."
+  (cl-reduce (lambda (a b) (and a b)) lst))
+
+(defun fldd--package-fetched? (package version)
+  "If PACKAGE version VERSION has been fetched by dub."
+  (file-exists-p (fldd--package-dir-name package version)))
+
+(defun fldd--package-dir-name (package version)
+  "Given PACKAGE and VERSION, return the directory name in the dub cache."
+  (let* ((version0 (subseq version 0 1))
+         (version-from-1 (subseq version 1))
+         (real-version (if (equal version0 "~") version-from-1 version)))
+    (concat "~/.dub/packages/" package "-" real-version)))
 
 (defun fldd--get-timestamp (file)
   "Return the timestamp of FILE.
