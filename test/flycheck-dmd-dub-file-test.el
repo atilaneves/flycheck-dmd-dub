@@ -119,10 +119,11 @@ configuration \"unittest\" {
                 (flycheck-dmd-dub-set-variables)
                 (should (equal (length flycheck-dmd-include-path) 3))
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
-                (should (equal (length flycheck-dmd-args) 3))
-                (should (equal (nth 0 flycheck-dmd-args) "-unittest"))
-                (should (equal-paths (nth 1 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
-                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
+                (should (equal (length flycheck-dmd-args) 4))
+                (should (equal (nth 0 flycheck-dmd-args) "-w"))
+                (should (equal (nth 1 flycheck-dmd-args) "-unittest"))
+                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
+                (should (equal-paths (nth 3 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
 (ert-deftest test-fldd-set-flags-configs ()
   "Tests that calling the real-life function with a DUB project sets the flags correctly"
@@ -131,9 +132,10 @@ configuration \"unittest\" {
                 (flycheck-dmd-dub-set-variables)
                 (should (equal (length flycheck-dmd-include-path) 3))
                 (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
-                (should (equal (nth 0 flycheck-dmd-args) "-unittest"))
-                (should (equal-paths (nth 1 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
-                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
+                (should (equal (nth 0 flycheck-dmd-args) "-w"))
+                (should (equal (nth 1 flycheck-dmd-args) "-unittest"))
+                (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
+                (should (equal-paths (nth 3 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
 
 
 

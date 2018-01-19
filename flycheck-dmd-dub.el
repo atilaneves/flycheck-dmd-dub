@@ -200,8 +200,14 @@ If FILE does not exist, return nil."
   (make-local-variable 'flycheck-dmd-include-path)
   (make-local-variable 'flycheck-dmd-args)
   (setq flycheck-dmd-include-path import-paths)
-  (let ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths)))
-    (setq flycheck-dmd-args (if (member "-unittest" flags) flags (cons "-unittest" flags)))))
+  (let* ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths))
+         (flags-w-ut (fldd--maybe-add-flag flags "-unittest"))
+         (flags-w-w  (fldd--maybe-add-flag flags-w-ut "-w")))
+    (setq flycheck-dmd-args flags-w-w)))
+
+(defun fldd--maybe-add-flag (flags flag)
+  "Add FLAG to FLAGS if not already present."
+  (if (member flag flags) flags (cons flag flags)))
 
 (defun fldd--cache-is-updated-p ()
   "Return non-nil if `fldd--cache-file' is up-to-date."
