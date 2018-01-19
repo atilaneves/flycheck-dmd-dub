@@ -178,8 +178,8 @@ brace are discarded before parsing."
          (dub-cfgs-cmd (fldd--maybe-add-no-deps raw-dub-cfgs-cmd))
          ;;(configs-output (shell-command-to-string dub-cfgs-cmd))
          (configs-output "")
-         (has-unittest (string-match "  unittest" configs-output))
-         (raw-dub-desc-cmd (if has-unittest "dub describe -c unittest" "dub describe"))
+         (has-unittest-cfg (string-match "  unittest" configs-output))
+         (raw-dub-desc-cmd (if has-unittest-cfg "dub describe -c unittest" "dub describe"))
          (dub-desc-cmd (fldd--maybe-add-no-deps raw-dub-desc-cmd)))
     (fldd--json-normalise (shell-command-to-string dub-desc-cmd))))
 
@@ -246,6 +246,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
                    (import-paths (cdr (assq 'import-paths alist)))
                    (string-import-paths (cdr (assq 'string-import-paths alist))))
               (fldd--set-variables import-paths string-import-paths))
+          ;; else
           (let* ((json-string (fldd--get-dub-describe-output))
                  (json (json-read-from-string json-string))
                  (import-paths (fldd--get-dub-package-dirs-json json))
