@@ -42,10 +42,40 @@
 (require 'f)
 (require 'cl-lib)
 
-(defvar
+(defgroup flycheck-dmd-dub nil
+  "Sets flycheck dmd compiler flags from dub package information"
+  :prefix "flycheck-dmd-dub-"
+  :group 'flycheck)
+
+(defcustom
+  flycheck-dmd-dub-use-cache-p
+  nil
+  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file."
+  :type 'boolean
+  :group 'flycheck-dmd-dub)
+
+(defcustom
   fldd-no-recurse-dir
   nil
-  "If set, will stop flycheck-dmd-dub from recursing upwards after finding the dub package root.")
+  "If set, will stop flycheck-dmd-dub from recursing upwards after finding the dub package root."
+  :type 'boolean
+  :group 'flycheck-dmd-dub)
+
+(defcustom
+  fldd--cache-file
+  ".fldd.cache"
+  "File to cache the result of dub describe."
+  :type 'string
+  :safe #'stringp)
+
+(defcustom
+  fldd-dub-configuration
+  nil
+  "If set, will use this dub configuration when calling dub describe (e.g. unittest -> dub describe -c unittest)"
+  :group 'flycheck-dmd-dub
+  :type 'string
+  :safe #'stringp)
+
 
 (defun fldd--dub-pkg-version-to-suffix (version)
   "From dub dependency to suffix for the package directory.
@@ -136,6 +166,18 @@ brace are discarded before parsing."
   (let ((packages (assq 'packages json)))
     (fldd--pkgs-to-string-import-paths packages)))
 
+(defun fldd--get-dub-package-versions-json (json)
+  "Get versions from JSON."
+  (let* ((packages (cdr (assq 'packages json)))
+         (package (elt packages 0)))
+    (cdr (assq 'versions package))))
+
+(defun fldd--get-dub-package-dflags-json (json)
+  "Get versions from JSON."
+  (let* ((packages (cdr (assq 'packages json)))
+         (package (elt packages 0)))
+    (cdr (assq 'dflags package))))
+
 
 (defun fldd--json-normalise (output)
   "Normalises OUTPUT to it's valid JSON."
@@ -177,10 +219,9 @@ brace are discarded before parsing."
   "Return the output from dub with package description."
   (let* ((raw-dub-cfgs-cmd "dub --annotate build --print-configs --build=docs")
          (dub-cfgs-cmd (fldd--maybe-add-no-deps raw-dub-cfgs-cmd))
-         ;;(configs-output (shell-command-to-string dub-cfgs-cmd))
-         (configs-output "")
-         (has-unittest-cfg (string-match "  unittest" configs-output))
-         (raw-dub-desc-cmd (if has-unittest-cfg "dub describe -c unittest" "dub describe"))
+         ;;(configs-output (shell-command-to-string dub-cfgs-cmd)) ;; disabled for now
+         (configs-output "") ;; disabled for now due to slowness
+         (raw-dub-desc-cmd (if fldd-dub-configuration (concat "dub describe -c " fldd-dub-configuration) "dub describe"))
          (dub-desc-cmd (fldd--maybe-add-no-deps raw-dub-desc-cmd)))
     (fldd--message "Calling dub describe with '%s'" dub-desc-cmd)
     (fldd--json-normalise (shell-command-to-string dub-desc-cmd))))
@@ -193,8 +234,7 @@ brace are discarded before parsing."
         raw-command
       ;; else
       (let* ((selections (json-read-file dub-selections-json))
-             (dependencies (cdr (assoc 'versions selections)))
-             )
+             (dependencies (cdr (assoc 'versions selections))))
         (if (fldd--packages-fetched? dependencies)
             (concat raw-command " --nodeps --skip-registry=all")
           raw-command)))))
@@ -224,8 +264,8 @@ brace are discarded before parsing."
 
 (defun fldd--package-dir-name (package version)
   "Given PACKAGE and VERSION, return the directory name in the dub cache."
-  (let* ((version0 (subseq version 0 1))
-         (version-from-1 (subseq version 1))
+  (let* ((version0 (cl-subseq version 0 1))
+         (version-from-1 (cl-subseq version 1))
          (real-version (if (equal version0 "~") version-from-1 version)))
     (concat "~/.dub/packages/" package "-" real-version)))
 
@@ -235,15 +275,18 @@ If FILE does not exist, return nil."
   (when (file-exists-p file)
     (nth 5 (file-attributes file))))
 
-(defun fldd--set-variables (import-paths string-import-paths)
-  "Set IMPORT-PATHS and STRING-IMPORT-PATHS to flycheck-dmd variables."
+(defun fldd--set-variables (import-paths string-import-paths versions dflags)
+  "Use IMPORT-PATHS, STRING-IMPORT-PATHS, VERSIONS and DFLAGS to flycheck dmd variables."
   (make-local-variable 'flycheck-dmd-include-path)
   (make-local-variable 'flycheck-dmd-args)
   (setq flycheck-dmd-include-path import-paths)
-  (let* ((flags (mapcar #'(lambda (x) (concat "-J" x)) string-import-paths))
-         (flags-w-ut (fldd--maybe-add-flag flags "-unittest"))
-         (flags-w-w  (fldd--maybe-add-flag flags-w-ut "-w")))
-    (setq flycheck-dmd-args flags-w-w)))
+  (let* ((flags)
+         (flags (append (mapcar (lambda (x) (concat "-version=" x)) versions) flags))
+         (flags (append dflags flags))
+         (flags (append (mapcar (lambda (x) (concat "-J" x)) string-import-paths) flags))
+         (flags (fldd--maybe-add-flag flags "-unittest"))
+         (flags  (fldd--maybe-add-flag flags "-w")))
+    (setq flycheck-dmd-args flags)))
 
 (defun fldd--maybe-add-flag (flags flag)
   "Add FLAG to FLAGS if not already present."
@@ -256,19 +299,6 @@ If FILE does not exist, return nil."
     (and conf-timestamp cache-timestamp
          (time-less-p conf-timestamp cache-timestamp))))
 
-(defvar fldd--cache-file ".fldd.cache"
-  "File to cache the result of dub describe.")
-
-(defgroup flycheck-dmd-dub nil
-  "Sets flycheck-dmd-include-paths from dub package information"
-  :prefix "flycheck-dmd-dub-"
-  :group 'flycheck)
-
-;;;###autoload
-(defcustom flycheck-dmd-dub-use-cache-p nil
-  "Non-nil means that `flycheck-dmd-dub-set-variables' reuses the result of dub describe by using cache file."
-  :type 'boolean
-  :group 'flycheck-dmd-dub)
 
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
@@ -290,14 +320,20 @@ to `fldd--cache-file' to reuse the result of dub describe."
         (if (and flycheck-dmd-dub-use-cache-p (fldd--cache-is-updated-p))
             (let* ((alist (read (f-read fldd--cache-file)))
                    (import-paths (cdr (assq 'import-paths alist)))
-                   (string-import-paths (cdr (assq 'string-import-paths alist))))
-              (fldd--set-variables import-paths string-import-paths))
+                   (string-import-paths (cdr (assq 'string-import-paths alist)))
+                   (versions)
+                   (dflags))
+              (fldd--message "Using cache")
+              (fldd--set-variables import-paths string-import-paths nil nil))
           ;; else
           (let* ((json-string (fldd--get-dub-describe-output))
                  (json (json-read-from-string json-string))
                  (import-paths (fldd--get-dub-package-dirs-json json))
-                 (string-import-paths (fldd--get-dub-package-string-import-paths-json json)))
-            (fldd--set-variables import-paths string-import-paths)
+                 (string-import-paths (fldd--get-dub-package-string-import-paths-json json))
+                 (versions (fldd--get-dub-package-versions-json json))
+                 (dflags (fldd--get-dub-package-dflags-json json)))
+            (fldd--message "Reading from dub describe")
+            (fldd--set-variables import-paths string-import-paths versions dflags)
             (when flycheck-dmd-dub-use-cache-p
               (let ((cache-text (with-output-to-string
                                   (print `((import-paths . ,import-paths)

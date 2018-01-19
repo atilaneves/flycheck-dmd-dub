@@ -66,14 +66,14 @@ dependency \"cerealed\" version=\"~master\"
   (let ((path (expand-file-name name path)))
     (f-write-text "name \"test_project\"
 targetType \"none\"
-stringImportPaths \"stringies\" \"otherstringies\"
 dependency \"cerealed\" version=\"~master\"
 configuration \"default\" {
-
+    stringImportPaths \"stringies\" \"otherstringies\"
 }
 
 configuration \"unittest\" {
     versions \"testVersion\"
+    dflags \"-foo\" \"-bar\"
 }
 
 " 'utf-8 path))
@@ -136,6 +136,21 @@ configuration \"unittest\" {
                 (should (equal (nth 1 flycheck-dmd-args) "-unittest"))
                 (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
                 (should (equal-paths (nth 3 flycheck-dmd-args) (concat "-J" (expand-file-name "otherstringies" fldd--sandbox-path))))))
+
+(ert-deftest test-fldd-set-flags-configs-with-fldd-dub-configuration-set ()
+  "Tests that calling the real-life function with a DUB project sets the flags correctly"
+  (let ((fldd-dub-configuration "unittest")
+        (flycheck-dmd-dub-use-cache-p nil))
+    (with-sandbox fldd--sandbox-path
+
+                  (write-sdl-file-configs "dub.sdl" fldd--sandbox-path)
+
+                  (flycheck-dmd-dub-set-variables)
+
+                  (should (equal (length flycheck-dmd-include-path) 3))
+                  (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+
+                  (should (equal flycheck-dmd-args '("-w" "-unittest" "-foo" "-bar" "-version=testVersion"))))))
 
 
 
