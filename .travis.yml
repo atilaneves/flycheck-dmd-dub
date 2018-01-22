@@ -43,4 +43,4 @@ install:
   - sudo apt-get -y install dub
 
 script:
-  - make test EMACS=${EMACS}
+  - make test
