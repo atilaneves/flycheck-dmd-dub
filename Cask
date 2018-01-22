@@ -6,4 +6,5 @@
 (depends-on "flycheck" "json" "cl-lib" "f")
 
 (development
- (depends-on "ert-runner"))
+ (depends-on "ert-runner")
+ (depends-on "undercover"))
