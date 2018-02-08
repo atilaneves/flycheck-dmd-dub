@@ -1,7 +1,7 @@
 (source gnu)
 (source melpa)
 
-(package "flycheck-dmd-dub" "0.7" "")
+(package "flycheck-dmd-dub" "0.12" "")
 
 (depends-on "flycheck" "json" "cl-lib" "f")
 
