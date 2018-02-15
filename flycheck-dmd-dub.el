@@ -340,6 +340,10 @@ to `fldd--cache-file' to reuse the result of dub describe."
                                            (string-import-paths . ,string-import-paths))))))
                 (f-write cache-text 'utf-8 fldd--cache-file)))))))))
 
+(defun flycheck-dmd-add-version (version)
+  "Add VERSION to the list of dmd arguments when calling flycheck."
+  (add-to-list 'flycheck-dmd-args (concat "-version=" version)))
+
 
 (provide 'flycheck-dmd-dub)
 ;;; flycheck-dmd-dub ends here
