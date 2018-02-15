@@ -246,13 +246,13 @@ brace are discarded before parsing."
 
 (defun fldd--packages-fetched? (dependencies)
   "If all packages in DEPENDENCIES have been fetched."
+  (fldd--all (mapcar #'fldd--dependency-fetched? dependencies)))
 
-  (defun dependency-fetched? (dependency)
-    (let ((package (symbol-name (car dependency)))
-          (version (cdr dependency)))
-      (fldd--package-fetched? package version)))
-
-  (fldd--all (mapcar #'dependency-fetched? dependencies)))
+(defun fldd--dependency-fetched? (dependency)
+  "If DEPENDENCY has already been fetched."
+  (let ((package (symbol-name (car dependency)))
+        (version (cdr dependency)))
+    (fldd--package-fetched? package version)))
 
 (defun fldd--all (lst)
   "If all elements in LST are true."
@@ -289,7 +289,7 @@ If FILE does not exist, return nil."
     (setq flycheck-dmd-args flags)))
 
 (defun fldd--maybe-add-flag (flags flag)
-  "Add FLAG to FLAGS if not already present."
+  "Concat FLAGS and FLAG if the latter is not already present."
   (if (member flag flags) flags (cons flag flags)))
 
 (defun fldd--cache-is-updated-p ()
