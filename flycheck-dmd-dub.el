@@ -262,6 +262,20 @@ brace are discarded before parsing."
          (real-version (if (equal version0 "~") version-from-1 version)))
     (concat "~/.dub/packages/" package "-" real-version)))
 
+(defun fldd--describe-cache-invalidated? (project-dir cache-file)
+  "If the `dub describe' cache is invalidated for PROJECT-DIR given CACHE-FILE."
+  (if (not (file-exists-p cache-file))
+      t
+    (let ((default-directory project-dir))
+      (or (fldd--file-exists-and-is-newer? "dub.selections.json" cache-file)
+          (fldd--file-exists-and-is-newer? "dub.sdl" cache-file)
+          (fldd--file-exists-and-is-newer? "dub.json" cache-file)
+          (fldd--file-exists-and-is-newer? "package.json" cache-file)))))
+
+(defun fldd--file-exists-and-is-newer? (file1 file2)
+  "If FILE1 exists and is newer than FILE2."
+  (and (file-exists-p file1) (fldd--1st-file-newer? file1 file2)))
+
 (defun fldd--1st-file-newer? (file1 file2)
   "If FILE1 is newer than FILE2."
   (let ((timestamp1 (fldd--get-timestamp file1))
@@ -323,7 +337,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
   (let* ((default-directory project-dir)
          (cache-file-name (fldd--dub-describe-cache-file-name))
          (cache-file-dir (file-name-directory cache-file-name)))
-    (if (fldd--1st-file-newer? "dub.selections.json" cache-file-name)
+    (if (fldd--describe-cache-invalidated? project-dir cache-file-name)
         (progn
           (fldd--message "Cache invalidated, running dub describe.")
           (let ((dub-desc-output (fldd--get-dub-describe-output)))
