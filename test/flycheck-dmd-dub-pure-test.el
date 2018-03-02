@@ -24,6 +24,10 @@
 
 ;;; Code:
 
+(require 'ert)
+(require 'flycheck-dmd-dub)
+
+
 (ert-deftest test-fldd--dub-pkg-version-to-suffix ()
   "Test getting the suffix from the package version"
   (should (equal (fldd--dub-pkg-version-to-suffix "~master") "-master"))
@@ -86,8 +90,7 @@
                         { \"path\": \"/foo/bar/source\", \"importPaths\": [\".\"]},
                         { \"path\": \"/blug/dlag/\", \"importPaths\": [\"source\"]}
                    ]}"))
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  )
+                 '("/foo/bar/source" "/blug/dlag/source"))))
 
 (ert-deftest test-fldd--get-dub-package-string-imports-json ()
   "Test getting the package directories from a json string."
@@ -101,8 +104,8 @@
                         { \"path\": \"/foo/bar/source\", \"stringImportPaths\": [\".\"]},
                         { \"path\": \"/blug/dlag/\", \"stringImportPaths\": [\"source\"]}
                    ]}"))
-                 '("/foo/bar/source" "/blug/dlag/source")))
-  )
+                 '("/foo/bar/source" "/blug/dlag/source"))))
+
 
 (provide 'flycheck-dmd-dub-test-pure)
-;;; flycheck-dmd-dub-test-pure.el ends here
+;;; flycheck-dmd-dub-pure-test.el ends here
