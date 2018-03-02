@@ -303,8 +303,8 @@ If FILE does not exist, return nil."
 ;;;###autoload
 (defun flycheck-dmd-dub-set-include-path ()
   "Set `flycheck-dmd-include-path' from dub info if available."
-  (let* ((basedir (fldd--get-project-dir)))
-    (when basedir
+  (let* ((project-dir (fldd--get-project-dir)))
+    (when project-dir
       (make-local-variable 'flycheck-dmd-include-path)
       (setq flycheck-dmd-include-path (fldd--get-dub-package-dirs)))))
 
@@ -314,31 +314,39 @@ If FILE does not exist, return nil."
 It also outputs the values of `import-paths' and `string-import-paths'
 to `fldd--cache-file' to reuse the result of dub describe."
   (interactive)
-  (let ((basedir (fldd--get-project-dir)))
-    (when basedir
-      (let ((default-directory basedir))
+  (let ((project-dir (fldd--get-project-dir)))
+    (when project-dir
+      (let ((default-directory project-dir))
         (if (and flycheck-dmd-dub-use-cache-p (fldd--cache-is-updated-p))
-            (let* ((alist (read (f-read fldd--cache-file)))
-                   (import-paths (cdr (assq 'import-paths alist)))
-                   (string-import-paths (cdr (assq 'string-import-paths alist)))
-                   (versions)
-                   (dflags))
-              (fldd--message "Using cache")
-              (fldd--set-variables import-paths string-import-paths nil nil))
+            (fldd--set-variables-from-cache project-dir)
           ;; else
-          (let* ((json-string (fldd--get-dub-describe-output))
-                 (json (json-read-from-string json-string))
-                 (import-paths (fldd--get-dub-package-dirs-json json))
-                 (string-import-paths (fldd--get-dub-package-string-import-paths-json json))
-                 (versions (fldd--get-dub-package-versions-json json))
-                 (dflags (fldd--get-dub-package-dflags-json json)))
-            (fldd--message "Reading from dub describe")
-            (fldd--set-variables import-paths string-import-paths versions dflags)
-            (when flycheck-dmd-dub-use-cache-p
-              (let ((cache-text (with-output-to-string
-                                  (print `((import-paths . ,import-paths)
-                                           (string-import-paths . ,string-import-paths))))))
-                (f-write cache-text 'utf-8 fldd--cache-file)))))))))
+          (fldd--parse-dub-describe project-dir))))))
+
+(defun fldd--set-variables-from-cache (project-dir)
+  "Set flycheck variables from the cache for PROJECT-DIR."
+  (let* ((alist (read (f-read fldd--cache-file)))
+         (import-paths (cdr (assq 'import-paths alist)))
+         (string-import-paths (cdr (assq 'string-import-paths alist)))
+         (versions)
+         (dflags))
+    (fldd--message "Using cache")
+    (fldd--set-variables import-paths string-import-paths nil nil)))
+
+(defun fldd--parse-dub-describe (project-dir)
+  "Parse the output of running `dub describe' in PROJECT-DIR."
+  (let* ((json-string (fldd--get-dub-describe-output))
+         (json (json-read-from-string json-string))
+         (import-paths (fldd--get-dub-package-dirs-json json))
+         (string-import-paths (fldd--get-dub-package-string-import-paths-json json))
+         (versions (fldd--get-dub-package-versions-json json))
+         (dflags (fldd--get-dub-package-dflags-json json)))
+    (fldd--message "Reading from dub describe")
+    (fldd--set-variables import-paths string-import-paths versions dflags)
+    (when flycheck-dmd-dub-use-cache-p
+      (let ((cache-text (with-output-to-string
+                          (print `((import-paths . ,import-paths)
+                                   (string-import-paths . ,string-import-paths))))))
+        (f-write cache-text 'utf-8 fldd--cache-file)))))
 
 (defun flycheck-dmd-dub-add-version (version)
   "Add VERSION to the list of dmd arguments when calling flycheck."
