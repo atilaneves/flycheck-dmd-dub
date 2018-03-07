@@ -378,10 +378,22 @@ to `fldd--cache-file' to reuse the result of dub describe."
          (dflags))
     (fldd--set-variables import-paths string-import-paths nil nil)))
 
-
 (defun flycheck-dmd-dub-add-version (version)
   "Add VERSION to the list of dmd arguments when calling flycheck."
   (add-to-list 'flycheck-dmd-args (concat "-version=" version)))
+
+(defun fldd-add-version (version)
+  "Add VERSION to the list of dmd arguments when calling flycheck."
+  (flycheck-dmd-dub-add-version (version)))
+
+;;;###autoload
+(defun fldd-run ()
+  "Set all flycheck-dmd variables.
+It also outputs the values of `import-paths' and `string-import-paths'
+to `fldd--cache-file' to reuse the result of dub describe."
+  (interactive)
+  (flycheck-dmd-dub-set-variables))
+
 
 
 ;; FIXME: DELETE
