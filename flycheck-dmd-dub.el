@@ -384,7 +384,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
 
 (defun fldd-add-version (version)
   "Add VERSION to the list of dmd arguments when calling flycheck."
-  (flycheck-dmd-dub-add-version (version)))
+  (flycheck-dmd-dub-add-version version))
 
 ;;;###autoload
 (defun fldd-run ()
