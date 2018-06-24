@@ -27,9 +27,9 @@
 (require 'ert)
 (require 'flycheck-dmd-dub)
 
-(defmacro with-sandbox (&rest body)
-  "Evaluate BODY in an empty temporary directory."
-  `(let* ((root-sandbox-path (expand-file-name "sandbox" fldd-test-path))
+(defmacro with-sandbox (dir &rest body)
+  "Evaluate BODY in the sandbox directory DIR, which will be cleared/created."
+  `(let* ((root-sandbox-path ,dir)
           (default-directory root-sandbox-path))
      (setq flycheck-dmd-include-path nil)
      (when (f-dir? root-sandbox-path)
