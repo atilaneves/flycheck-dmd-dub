@@ -131,6 +131,21 @@ configuration \"unittest\" {
   (with-sandbox fldd--sandbox-path
                 (flycheck-dmd-dub-set-variables)))
 
+(ert-deftest test-fldd-set-flags-order ()
+  "Tests priority of Dub project files"
+  (with-sandbox fldd--sandbox-path
+
+                (f-mkdir "a")
+                (f-mkdir "a/b")
+                (setq default-directory (expand-file-name "a/b" fldd--sandbox-path))
+
+                (write-json-file "dub.json" fldd--sandbox-path)
+                (write-sdl-file-configs "dub.sdl" (expand-file-name "a" fldd--sandbox-path))
+
+                (should (equal
+                         (file-name-as-directory (fldd--get-project-dir))
+                         (file-name-as-directory fldd--sandbox-path)))))
+
 
 
 (provide 'flycheck-dmd-dub-file-test)
