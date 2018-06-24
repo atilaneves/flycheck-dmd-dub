@@ -189,10 +189,12 @@ brace are discarded before parsing."
 
 (defun fldd--get-project-dir ()
   "Locates the project directory by searching up for either package.json or dub.json."
-  (let ((dub-sdl-dir (fldd--locate-topmost "dub.sdl"))
-        (dub-json-dir (fldd--locate-topmost "dub.json"))
-        (package-json-dir (fldd--locate-topmost "package.json")))
-    (file-truename (or dub-sdl-dir dub-json-dir package-json-dir))))
+  (let ((project-dir (or
+                      (fldd--locate-topmost "dub.sdl")
+                      (fldd--locate-topmost "dub.json")
+                      (fldd--locate-topmost "package.json"))))
+    (when project-dir
+      (file-truename project-dir))))
 
 (defun fldd--locate-topmost (file-name)
   "Locate the topmost FILE-NAME."

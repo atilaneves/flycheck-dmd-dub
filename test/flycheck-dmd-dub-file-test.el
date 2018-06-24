@@ -126,6 +126,11 @@ configuration \"unittest\" {
 
                   (should (equal flycheck-dmd-args '("-w" "-unittest" "-foo" "-bar" "-version=testVersion"))))))
 
+(ert-deftest test-fldd-set-flags-non-dub ()
+  "Tests that handling non-Dub projects succeeds without an error"
+  (with-sandbox fldd--sandbox-path
+                (flycheck-dmd-dub-set-variables)))
+
 
 
 (provide 'flycheck-dmd-dub-file-test)
