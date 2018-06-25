@@ -27,9 +27,9 @@
 (require 'ert)
 (require 'flycheck-dmd-dub)
 
-(defmacro with-sandbox (&rest body)
-  "Evaluate BODY in an empty temporary directory."
-  `(let* ((root-sandbox-path (expand-file-name "sandbox" fldd-test-path))
+(defmacro with-sandbox (dir &rest body)
+  "Evaluate BODY in the sandbox directory DIR, which will be cleared/created."
+  `(let* ((root-sandbox-path ,dir)
           (default-directory root-sandbox-path))
      (setq flycheck-dmd-include-path nil)
      (when (f-dir? root-sandbox-path)
@@ -125,6 +125,26 @@ configuration \"unittest\" {
                   (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
 
                   (should (equal flycheck-dmd-args '("-w" "-unittest" "-foo" "-bar" "-version=testVersion"))))))
+
+(ert-deftest test-fldd-set-flags-non-dub ()
+  "Tests that handling non-Dub projects succeeds without an error"
+  (with-sandbox fldd--sandbox-path
+                (flycheck-dmd-dub-set-variables)))
+
+(ert-deftest test-fldd-set-flags-order ()
+  "Tests priority of Dub project files"
+  (with-sandbox fldd--sandbox-path
+
+                (f-mkdir "a")
+                (f-mkdir "a/b")
+                (setq default-directory (expand-file-name "a/b" fldd--sandbox-path))
+
+                (write-json-file "dub.json" fldd--sandbox-path)
+                (write-sdl-file-configs "dub.sdl" (expand-file-name "a" fldd--sandbox-path))
+
+                (should (equal
+                         (file-name-as-directory (fldd--get-project-dir))
+                         (file-name-as-directory fldd--sandbox-path)))))
 
 
 
