@@ -49,7 +49,7 @@
 \"name\": \"test_project\",
 \"targetType\": \"none\",
 \"stringImportPaths\": [\"stringies\", \"otherstringies\"],
-\"dependencies\": { \"cerealed\": \"~master\" }
+\"dependencies\": { \"cerealed\": \"==0.6.10\" }
 }\n" 'utf-8 path))
   )
 
@@ -59,7 +59,7 @@
     (f-write-text "name \"test_project\"
 targetType \"none\"
 stringImportPaths \"stringies\" \"otherstringies\"
-dependency \"cerealed\" version=\"~master\"
+dependency \"cerealed\" version=\"==0.6.10\"
 
 " 'utf-8 path))
   )
@@ -69,7 +69,7 @@ dependency \"cerealed\" version=\"~master\"
   (let ((path (expand-file-name name path)))
     (f-write-text "name \"test_project\"
 targetType \"none\"
-dependency \"cerealed\" version=\"~master\"
+dependency \"cerealed\" version=\"==0.6.10\"
 configuration \"default\" {
     stringImportPaths \"stringies\" \"otherstringies\"
 }
@@ -91,8 +91,8 @@ configuration \"unittest\" {
   (with-sandbox fldd--sandbox-path
                 (write-json-file "dub.json" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-variables)
-                (should (equal (length flycheck-dmd-include-path) 3))
-                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+                (should (equal (length flycheck-dmd-include-path) 10))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-0.6.10/cerealed/src"))
                 (should (equal (length flycheck-dmd-args) 4))
                 (should (equal (nth 0 flycheck-dmd-args) "-w"))
                 (should (equal (nth 1 flycheck-dmd-args) "-unittest"))
@@ -104,8 +104,8 @@ configuration \"unittest\" {
   (with-sandbox fldd--sandbox-path
                 (write-sdl-file-configs "dub.sdl" fldd--sandbox-path)
                 (flycheck-dmd-dub-set-variables)
-                (should (equal (length flycheck-dmd-include-path) 3))
-                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+                (should (equal (length flycheck-dmd-include-path) 10))
+                (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-0.6.10/cerealed/src"))
                 (should (equal (nth 0 flycheck-dmd-args) "-w"))
                 (should (equal (nth 1 flycheck-dmd-args) "-unittest"))
                 (should (equal-paths (nth 2 flycheck-dmd-args) (concat "-J" (expand-file-name "stringies" fldd--sandbox-path))))
@@ -121,8 +121,8 @@ configuration \"unittest\" {
 
                   (flycheck-dmd-dub-set-variables)
 
-                  (should (equal (length flycheck-dmd-include-path) 3))
-                  (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-master/cerealed/src"))
+                  (should (equal (length flycheck-dmd-include-path) 10))
+                  (should (equal-paths (car flycheck-dmd-include-path) "~/.dub/packages/cerealed-0.6.10/cerealed/src"))
 
                   (should (equal flycheck-dmd-args '("-w" "-unittest" "-foo" "-bar" "-version=testVersion"))))))
 
