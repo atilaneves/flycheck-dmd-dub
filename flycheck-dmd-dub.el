@@ -90,11 +90,11 @@ PKG is a package name such as 'cerealed': '~master'."
 
 (defun fldd--pkgs-to-dir-names (pkgs)
   "Return a list of dir names for assoc list PKGS."
-  (fldd--flatten (mapcar #'fldd--pkg-to-dir-names (cdr pkgs))))
+  (delete-dups (fldd--flatten (mapcar #'fldd--pkg-to-dir-names (cdr pkgs)))))
 
 (defun fldd--pkgs-to-string-import-paths (pkgs)
   "Return a list of dir names for assoc list PKGS."
-  (fldd--flatten (mapcar #'fldd--pkg-to-string-import-paths (cdr pkgs))))
+  (delete-dups (fldd--flatten (mapcar #'fldd--pkg-to-string-import-paths (cdr pkgs)))))
 
 
 (defun fldd--get-dub-package-dirs-json (json)
