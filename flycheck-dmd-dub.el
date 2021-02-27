@@ -95,9 +95,12 @@ directory name with."
 
 (defun fldd--dub-pkgs-dir ()
   "Return the directory where dub packages are found."
-  (if (eq system-type 'windows-nt)
-      (concat (getenv "APPDATA") "\\dub\\packages\\")
-    "~/.dub/packages/"))
+  (let ((windub (concat (or (getenv "LOCALAPPDATA") (getenv "APPDATA"))
+                        "\\dub\\packages\\")))
+    (cond ((eq system-type 'windows-nt) windub)
+          ((eq system-type 'cygwin)
+           (cygwin-convert-file-name-from-windows windub))
+          (t "~/.dub/packages/"))))
 
 
 (defun fldd--dub-pkg-to-dir-name (pkg)
@@ -111,7 +114,14 @@ PKG is a package name such as 'cerealed': '~master'."
   "Take a PKG assoc list and return the value for KEY."
   (let ((import-paths (cdr (assq key pkg)))
         (path (cdr (assq 'path pkg))))
-    (mapcar (lambda (p) (expand-file-name p path)) import-paths)))
+    (mapcar (lambda (p)
+              (expand-file-name
+               p
+               (if (eq system-type 'cygwin)
+                   (cygwin-convert-file-name-from-windows path)
+                 path)))
+            import-paths)))
+
 
 (defun fldd--pkg-to-dir-names (pkg)
   "Return a directory name for the assoc list PKG."
