@@ -80,6 +80,16 @@
   (make-temp-file "fldd" 'dir)
   "A temporary directory to store dub describe outputs.")
 
+(defun fldd--json-read-from-string (string)
+  "Wrapper around `json-parse-string' that uses native JSON parser when available"
+  (if (fboundp 'json-parse-string)		;introduced at Emacs version 27.1
+	  (json-parse-string string
+						 ;; these are needed to mimic behaviour of `json-read-from-string'
+						 :object-type 'alist
+						 :null-object nil
+						 :false-object :json-false)
+	(json-read-from-string string)))
+
 
 (defun fldd--dub-pkg-version-to-suffix (version)
   "From dub dependency to suffix for the package directory.
@@ -142,7 +152,7 @@ PKG is a package name such as 'cerealed': '~master'."
 Return the directories where the packages are for the assoclist
 in this JSON string.  Any characters before the first opening
 brace are discarded before parsing."
-  (let ((data (ignore-errors (json-read-from-string json))))
+  (let ((data (ignore-errors (fldd--json-read-from-string json))))
     (and data (fldd--get-dub-package-dirs-json data))))
 
 (defun fldd--get-dub-package-dirs-json (json)
@@ -159,7 +169,7 @@ brace are discarded before parsing."
 Return the directories where the packages are for the assoclist
 in this JSON string.  Any characters before the first opening
 brace are discarded before parsing."
-  (let ((data (ignore-errors (json-read-from-string json))))
+  (let ((data (ignore-errors (fldd--json-read-from-string json))))
     (and data (fldd--get-dub-package-string-import-paths-json data))))
 
 (defun fldd--get-dub-package-string-import-paths-json (json)
@@ -368,7 +378,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
 (defun fldd--set-variables-from-json-string (json-string)
   "Parse the output of running of the `dub describe' JSON-STRING."
   (fldd--message "Setting variables from JSON string")
-  (let* ((json (json-read-from-string json-string))
+  (let* ((json (fldd--json-read-from-string json-string))
          (import-paths (fldd--get-dub-package-dirs-json json))
          (string-import-paths (fldd--get-dub-package-string-import-paths-json json))
          (versions (fldd--get-dub-package-versions-json json))
