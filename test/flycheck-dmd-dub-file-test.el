@@ -32,7 +32,6 @@
   `(let* ((root-sandbox-path ,dir)
           (default-directory root-sandbox-path))
      (setq flycheck-dmd-include-path nil)
-     (setq fldd--cache-dir (make-temp-file "fldd" 'dir))
      (when (f-dir? root-sandbox-path)
        (f-delete root-sandbox-path :force))
      (f-mkdir root-sandbox-path)

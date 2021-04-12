@@ -389,7 +389,11 @@ to `fldd--cache-file' to reuse the result of dub describe."
 
 (defun fldd--dub-describe-cache-file-name ()
   "The file name to cache the describe output for PROJECT-DIR."
-  (concat fldd--cache-dir (fldd--get-project-dir) "dub_describe.json"))
+  (concat
+   fldd--cache-dir
+   (fldd--get-project-dir)
+   (if fldd-dub-configuration (file-name-as-directory fldd-dub-configuration) "")
+   "dub_describe.json"))
 
 (defun fldd--set-variables-from-json-string (json-string)
   "Parse the output of running of the `dub describe' JSON-STRING."
