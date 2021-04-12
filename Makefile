@@ -20,7 +20,10 @@ unit:
 file-test:
 	${CASK} exec ert-runner test/flycheck-dmd-dub-file-test.el
 
+.PHONY: compile
 compile: flycheck-dmd-dub.elc
+
+flycheck-dmd-dub.elc:
 	${CASK} exec ${EMACS} -Q -batch -f batch-byte-compile flycheck-dmd-dub.el
 
 .PHONY: clean-elc
