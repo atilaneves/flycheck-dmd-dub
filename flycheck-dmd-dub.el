@@ -71,7 +71,7 @@
 (defcustom
   fldd-dub-configuration
   nil
-  "If set, will use this dub configuration when calling dub describe (e.g. unittest -> dub describe -c unittest)"
+  "If set, will use this dub configuration when calling dub describe (e.g. unittest -> dub describe -c unittest)."
   :group 'flycheck-dmd-dub
   :type 'string
   :safe #'stringp)
@@ -81,14 +81,14 @@
   "A temporary directory to store dub describe outputs.")
 
 (defun fldd--json-read-from-string (string)
-  "Wrapper around `json-parse-string' that uses native JSON parser when available"
-  (if (fboundp 'json-parse-string)		;introduced at Emacs version 27.1
-	  (json-parse-string string
-						 ;; these are needed to mimic behaviour of `json-read-from-string'
-						 :object-type 'alist
-						 :null-object nil
-						 :false-object :json-false)
-	(json-read-from-string string)))
+  "Call `json-parse-string' on STRING if available."
+  (if (fboundp 'json-parse-string)      ;introduced at Emacs version 27.1
+      (json-parse-string string
+                         ;; these are needed to mimic behaviour of `json-read-from-string'
+                         :object-type 'alist
+                         :null-object nil
+                         :false-object :json-false)
+    (json-read-from-string string)))
 
 
 (defun fldd--dub-pkg-version-to-suffix (version)
@@ -143,6 +143,7 @@ PKG is a package name such as 'cerealed': '~master'."
 
 
 (defun fldd--flatten(x)
+  "Flatten sequence X."
   (cond ((null x) nil)
         ((listp x) (append (fldd--flatten (car x)) (fldd--flatten (cdr x))))
         (t (list x))))
@@ -443,3 +444,5 @@ to `fldd--cache-file' to reuse the result of dub describe."
 
 (provide 'flycheck-dmd-dub)
 ;;; flycheck-dmd-dub ends here
+
+;;; flycheck-dmd-dub.el ends here
