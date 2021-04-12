@@ -12,9 +12,6 @@ jobs:
         dc: [dmd-2.096.0]
         ignore_warnings:
           - true
-        include:
-          - emacs_version: snapshot
-            ignore_warnings: false
     runs-on: ubuntu-20.04
 
     steps:
