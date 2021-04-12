@@ -8,13 +8,13 @@ jobs:
       matrix:
         emacs_version:
           - 26.3
-          # - 27.2
+          - 27.2
         dc: [dmd-2.096.0]
         ignore_warnings:
           - true
-        # include:
-        #   - emacs_version: snapshot
-        #     ignore_warnings: false
+        include:
+          - emacs_version: snapshot
+            ignore_warnings: false
     runs-on: ubuntu-20.04
 
     steps:
@@ -39,9 +39,3 @@ jobs:
     - run: cask install
 
     - run: make test
-
-    - uses: leotaku/elisp-check@master
-      with:
-        check: melpa
-        file: '*.el'
-        ignore_warnings: ${{ matrix.ignore_warnings }}
