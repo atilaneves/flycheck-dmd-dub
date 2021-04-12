@@ -1,7 +1,7 @@
 flycheck-dmd-dub
 ================
 
-[![Build Status](https://travis-ci.org/atilaneves/flycheck-dmd-dub.svg?branch=master)](https://travis-ci.org/atilaneves/flycheck-dmd-dub)
+[![Actions Status](https://github.com/atilaneves/flycheck-dmd-dub/workflows/CI/badge.svg)](https://github.com/atilaneves/flycheck-dmd-dub/actions)
 [![Coverage Status](https://coveralls.io/repos/github/atilaneves/flycheck-dmd-dub/badge.svg?branch=master)](https://coveralls.io/github/atilaneves/flycheck-dmd-dub?branch=master)
 [![MELPA](https://melpa.org/packages/flycheck-dmd-dub-badge.svg)](https://melpa.org/#/flycheck-dmd-dub)
 
