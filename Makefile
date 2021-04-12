@@ -28,4 +28,4 @@ flycheck-dmd-dub.elc:
 
 .PHONY: clean-elc
 clean-elc:
-	rm -f flycheck-dmd-dub.elc
+	rm -f *.elc

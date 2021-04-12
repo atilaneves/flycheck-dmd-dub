@@ -217,7 +217,12 @@ brace are discarded before parsing."
                  (file-exists-p (expand-file-name "dub.json" dir))
                  (file-exists-p (expand-file-name "package.json" dir)))))))
     (when dir
-      (file-truename dir))))
+      (file-truename dir)
+      (let ((project-dir
+             (if (eq system-type 'windows-nt)
+                 (replace-regexp-in-string ":" "_" dir)
+               dir)))
+        (file-truename project-dir)))))
 
 (defun fldd--locate-topmost (name)
   "Locate the topmost directory containing NAME.
@@ -384,14 +389,7 @@ to `fldd--cache-file' to reuse the result of dub describe."
 
 (defun fldd--dub-describe-cache-file-name ()
   "The file name to cache the describe output for PROJECT-DIR."
-  (expand-file-name
-   "dub_describe.json"
-   (expand-file-name
-    (let ((project-dir (fldd--get-project-dir)))
-      (if (eq system-type 'windows-nt)
-          (replace-regexp-in-string ":" "_" project-dir)
-        project-dir))
-    fldd--cache-dir)))
+  (concat fldd--cache-dir (fldd--get-project-dir) "dub_describe.json"))
 
 (defun fldd--set-variables-from-json-string (json-string)
   "Parse the output of running of the `dub describe' JSON-STRING."
