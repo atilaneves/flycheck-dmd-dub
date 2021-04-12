@@ -3,7 +3,10 @@
 
 (package "flycheck-dmd-dub" "0.12" "")
 
-(depends-on "flycheck" "json" "cl-lib" "f")
+(depends-on "flycheck")
+(depends-on "json")
+(depends-on "cl-lib")
+(depends-on "f")
 
 (development
  (depends-on "ert-runner")

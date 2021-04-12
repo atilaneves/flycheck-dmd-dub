@@ -1,0 +1,47 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          - 26.3
+          # - 27.2
+        dc: [dmd-2.096.0]
+        ignore_warnings:
+          - true
+        # include:
+        #   - emacs_version: snapshot
+        #     ignore_warnings: false
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install D compiler
+      uses: dlang-community/setup-dlang@v1.0.5
+      with:
+        compiler: ${{ matrix.dc }}
+
+    - uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+
+    - uses: conao3/setup-cask@master
+
+    - run: cask install
+
+    - run: make test
+
+    - uses: leotaku/elisp-check@master
+      with:
+        check: melpa
+        file: '*.el'
+        ignore_warnings: ${{ matrix.ignore_warnings }}
