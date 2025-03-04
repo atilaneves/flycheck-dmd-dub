@@ -287,7 +287,9 @@ NAME can be a filename or a predicate, like the `locate-dominating-file' argumen
 
 (defun fldd--all (lst)
   "If all elements in LST are true."
-  (cl-reduce (lambda (a b) (and a b)) lst))
+  (if (null lst)
+      t
+    (cl-reduce (lambda (a b) (and a b)) lst)))
 
 (defun fldd--package-fetched? (package version)
   "If PACKAGE version VERSION has been fetched by dub."
